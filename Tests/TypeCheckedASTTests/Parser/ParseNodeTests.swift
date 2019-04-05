@@ -30,6 +30,30 @@ class ParseNodeTests: XCTestCase {
         XCTAssertEqual(node.end.column, 1)
     }
 
+    func testParseType() throws {
+        let content = "(call_expr type='[String]')"
+        let (node, _) = try parseNode().parse(content)
+        XCTAssertEqual(node.attributes.first, .type("[String]"))
+    }
+
+    func testParseMultipleAttributes() throws {
+        let content = "(call_expr type='[String]' location=foo.swift:1:11 nothrow)"
+        let (node, _) = try parseNode().parse(content)
+        let location = Range.Point(
+            fileName: "foo.swift",
+            line: 1,
+            column: 11
+        )
+        XCTAssertEqual(
+            node.attributes,
+            [
+                .type("[String]"),
+                .location(location),
+                .nothrow
+            ]
+        )
+    }
+
     func testParseNodeWithRange() throws {
         let content = "(top_level_code_decl range=[foo.swift:1:1 - line:3:1])"
         let (node, _) = try parseNode().parse(content)

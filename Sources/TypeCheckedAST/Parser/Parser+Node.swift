@@ -15,14 +15,27 @@ func parseNode() -> Parser<RawNode> {
                 <^> stringLiteral()
                 <|> Parser.pure(nil)
         )
-        <*> skipSpaces() *> many(parseAttribute())
-        <*> skipSpaces() *> many(parseNode()) <* token(")")
+        <*> many(skipSpaces() *> parseAttribute())
+        <*> skipSpaces() *> many(skipSpaces() *> parseNode()) <* token(")")
 }
 
 func parseAttribute() -> Parser<Attribute> {
     return choice(
-        [Attribute.range <^> token("range") *> token("=") *> parseRange()]
+        [
+            Attribute.range <^> token("range=") *> parseRange(),
+            Attribute.type <^> token("type=") *> parseTypeName(),
+            Attribute.location <^> token("location=") *> parsePoint(),
+            Attribute.argLabels <^> token("arg_labels=") *> satisfyString(predicate: { $0 != " " }),
+            const(Attribute.nothrow) <^> token("nothrow"),
+            Attribute.__unknown <^> parseUnknown(),
+        ]
     )
+}
+
+func parseUnknown() -> Parser<UnknownAttribute> {
+    return curry(UnknownAttribute.init)
+        <^> keyword() *> token("=")
+        <*> (Optional.some <^> keyword() <|> .pure(nil))
 }
 
 func parseRange() -> Parser<Range> {
@@ -40,4 +53,10 @@ func parsePoint() -> Parser<Range.Point> {
         <^> satisfyString(predicate: { $0 != ":" })
         <*> token(":") *> number()
         <*> token(":") *> number()
+}
+
+
+func parseTypeName() -> Parser<String> {
+    let validString = satisfyString(predicate: { $0 != "'" })
+    return char("\'") *> validString <* char("\'")
 }

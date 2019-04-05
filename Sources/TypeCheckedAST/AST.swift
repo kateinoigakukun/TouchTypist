@@ -19,10 +19,20 @@ struct Range {
 
 enum Attribute {
     case range(Range)
-    case __unknown(String)
+    case type(String)
+    case location(Range.Point)
+    case argLabels(String)
+    case nothrow
+    case __unknown(UnknownAttribute)
+}
+
+struct UnknownAttribute {
+    let key: String
+    let value: String?
 }
 
 extension RawNode: Equatable {}
 extension Range: Equatable {}
 extension Range.Point: Equatable {}
+extension UnknownAttribute: Equatable {}
 extension Attribute: Equatable {}
