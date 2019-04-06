@@ -9,7 +9,7 @@ import Curry
 
 func parseNode() -> Parser<RawNode> {
     let node = (curry(RawNode.init)
-        <^> keyword()
+        <^> debugPrint() *> keyword()
         <*> skipSpaces() *> (
             Optional.some
                 <^> stringLiteral()
@@ -17,10 +17,10 @@ func parseNode() -> Parser<RawNode> {
         )
         <*> many(
             skipSpaces()
-                *> debugPrintIfThrow(#function, (
+                *> (
                     (AttributeOrNode.attribute <^> parseAttribute())
                         <|> (AttributeOrNode.node <^> parseNode())
-                ))
+                )
                 <* skipSpaces()
         )
     )
@@ -37,7 +37,7 @@ func parseAttribute() -> Parser<Attribute> {
             curry(Attribute.decl) <^> token("decl=") *> parseDecl(),
             Attribute.__unknown <^> parseUnknown(),
         ]
-    )
+    ) <* debugPrint()
 }
 
 func parseUnknown() -> Parser<UnknownAttribute> {
@@ -47,7 +47,7 @@ func parseUnknown() -> Parser<UnknownAttribute> {
         <|> debugPrint("Unknown 3") *> (String.init(describing:) <^> parseElements())
         <|> debugPrint("Unknown 4") *> (String.init(describing:) <^> parseDecl())
         <|> debugPrint("Unknown 5") *> satisfyString(predicate: {
-            return $0 != " " && $0 != "(" && $0 != ")"
+            return $0 != " " && $0 != "(" && $0 != ")" && $0 != "\n"
         })
     return curry(UnknownAttribute.init)
         <^> keyword()
@@ -135,7 +135,7 @@ func parseRange() -> Parser<Range> {
 
 func parsePoint() -> Parser<Range.Point> {
     return curry(Range.Point.init)
-        <^> satisfyString(predicate: { $0 != ":" })
+        <^> satisfyString(predicate: { $0 != ":" && $0 != "\n" && $0 != " " })
         <*> token(":") *> number()
         <*> token(":") *> number()
 }

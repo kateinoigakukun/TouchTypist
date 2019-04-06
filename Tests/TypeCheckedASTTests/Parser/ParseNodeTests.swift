@@ -59,15 +59,7 @@ let rawASTString = """
 (declref_expr implicit type='(Int.Type) -> (IntLiteral) -> Int' location=foo.swift:1:8 range=[foo.swift:1:8 - line:1:8] decl=Swift.(file).Int.init(_builtinIntegerLiteral:) function_ref=single)
 (type_expr implicit type='Int.Type' location=foo.swift:1:8 range=[foo.swift:1:8 - line:1:8] typerepr='Int'))
 (tuple_expr implicit type='(_builtinIntegerLiteral: Builtin.IntLiteral)' location=foo.swift:1:8 range=[foo.swift:1:8 - line:1:8] names=_builtinIntegerLiteral
-(integer_literal_expr type='Builtin.IntLiteral' location=foo.swift:1:8 range=[foo.swift:1:8 - line:1:8] value=3)
-)
-)
-)
-)
-)
-)
-)
-)
+(integer_literal_expr type='Builtin.IntLiteral' location=foo.swift:1:8 range=[foo.swift:1:8 - line:1:8] value=3)))))))))
 (paren_expr type='((Int) throws -> String)' location=foo.swift:1:15 range=[foo.swift:1:15 - line:3:1] trailing-closure
 (function_conversion_expr implicit type='(Int) throws -> String' location=foo.swift:1:15 range=[foo.swift:1:15 - line:3:1]
 (closure_expr type='(Int) -> String' location=foo.swift:1:15 range=[foo.swift:1:15 - line:3:1] discriminator=0 single-expression
@@ -93,8 +85,25 @@ class ParseNodeTests: XCTestCase {
         }
     }
 
-    func testExample() {
-//        try! parseNode().parse(rawASTString)
+    func testExample3() throws {
+        let (node, tail) = try parseNode().parse(rawASTString)
+        XCTAssertNotEqual(node.children.count, 0)
+        XCTAssertEqual(tail.count, 0)
+    }
+
+    func testExample2() throws {
+        let content = """
+        (closure_expr discriminator=0
+            (parameter_list range=[foo.swift:1:17 - line:1:17])
+        )
+        """
+        let (node, tail) = try parseNode().parse(content)
+        XCTAssertEqual(
+            node.attributes[0],
+            .__unknown(.init(key: "discriminator", value: "0"))
+        )
+        XCTAssertEqual(node.children.count, 1)
+        XCTAssertEqual(tail.count, 0)
     }
 
     func testExample1() {
