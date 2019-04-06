@@ -94,7 +94,7 @@ class ParseNodeTests: XCTestCase {
     }
 
     func testExample() {
-        try! parseNode().parse(rawASTString)
+//        try! parseNode().parse(rawASTString)
     }
 
     func testExample1() {
@@ -102,8 +102,10 @@ class ParseNodeTests: XCTestCase {
         let (node, tail1) = try! parseNode().parse(content)
         XCTAssertEqual(node.attributes[node.attributes.count-1], .__unknown(UnknownAttribute(key: "function_ref", value: "single")))
         XCTAssertEqual(tail1.count, 0)
-        let (unknown, tail2) = try! parseAttribute().parse("function_ref=single")
-        XCTAssertEqual(extractUnknown(unknown).key, "function_ref")
+        let (unknown, tail2) = try! parseUnknown().parse("function_ref=single")
+        XCTAssertEqual(unknown.key, "function_ref")
+        XCTAssertEqual(unknown.value, "single")
+        XCTAssertEqual(tail2.count, 0)
     }
 
     func testElements() throws {

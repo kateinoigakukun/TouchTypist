@@ -42,15 +42,15 @@ func parseAttribute() -> Parser<Attribute> {
 
 func parseUnknown() -> Parser<UnknownAttribute> {
     let value = (String.init(describing:) <^> parseRange())
-        <|> (String.init(describing:) <^> parseTypeName())
-        <|> (String.init(describing:) <^> parsePoint())
-        <|> (String.init(describing:) <^> parseElements())
-        <|> (String.init(describing:) <^> parseDecl())
-        <|> satisfyString(predicate: {
+        <|> debugPrint("Unknown 1") *> (String.init(describing:) <^> parseTypeName())
+        <|> debugPrint("Unknown 2") *> (String.init(describing:) <^> parsePoint())
+        <|> debugPrint("Unknown 3") *> (String.init(describing:) <^> parseElements())
+        <|> debugPrint("Unknown 4") *> (String.init(describing:) <^> parseDecl())
+        <|> debugPrint("Unknown 5") *> satisfyString(predicate: {
             return $0 != " " && $0 != "(" && $0 != ")"
         })
     return curry(UnknownAttribute.init)
-        <^> keyword() <* debugPrint("unknown")
+        <^> keyword()
         <*> (
             (Optional.some <^> (token("=") *> value))
                 <|> .pure(nil)
@@ -62,25 +62,27 @@ let join3: (String, String, String) -> String = { $0 + $1 + $2 }
 let join2: (String, String) -> String = { $0 + $1 }
 
 func declSignature() -> Parser<String> {
-    func rec() -> Parser<[String]> {
-        let word = (
-            curry(join4)
-                <^> keyword()
-                <*> token("(")
+    let word = (
+        curry(join4)
+            <^> keyword()
+            <*> token("(")
+            <*> keyword()
+            <*> token(")")
+        )
+        <|>
+        (
+            curry(join3)
+                <^> token("(")
                 <*> keyword()
                 <*> token(")")
-            )
-            <|> (
-                curry(join3)
-                    <^> token("(")
-                    <*> keyword()
-                    <*> token(")")
-            )
-            <|> keyword()
+        )
+        <|> keyword()
+    func rec() -> Parser<[String]> {
         return cons
             <^> (curry({ $0 + $1 }) <^> token(".") <*> word)
             <*> (rec() <|> Parser.pure([]))
     }
+
     return curry(Array.joined)
         <^> (cons <^> keyword() <*> rec())
         <*> Parser.pure("")
@@ -90,7 +92,7 @@ func parseDecl() -> Parser<Decl> {
     return curry(Decl.init) <^>
         (
             curry(Array.joined)
-                <^> many(skipSpaces() *> declSignature() <* skipSpaces())
+                <^> many1(skipSpaces() *> declSignature() <* skipSpaces())
                 <*> Parser.pure(" ")
         )
         <*> skipSpaces()
