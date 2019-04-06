@@ -68,7 +68,7 @@ func declSignature() -> Parser<String> {
     let sig = funcSig <|> fileSig <|> keyword()
     func rec() -> Parser<[String]> {
         return cons
-            <^> (curry({ $0 + $1 }) <^> token(".") <*> sig)
+            <^> (curry(join2) <^> token(".") <*> sig)
             <*> (rec() <|> Parser.pure([]))
     }
 
