@@ -9,23 +9,20 @@ import XCTest
 @testable import TypeCheckedAST
 
 let rawASTString = """
-(declref_expr decl=Swift.(file).Collection extension.map [with (substitution_map generic_signature=<Self, T where Self : Collection> (substitution Self -> [Int]) (substitution T -> String))] function_ref=single)
+(parameter_list (parameter "i" type='Int' interface type='Int') range=[foo.swift:1:17 - line:1:17])
 """
 
 class ParseNodeTests: XCTestCase {
 
-    func testExample() throws {
-        func extractDecl(_ attr: Attribute) -> Decl {
-            switch attr {
-            case .decl(let decl): return decl
-            default: fatalError()
-            }
+    func extractDecl(_ attr: Attribute) -> Decl {
+        switch attr {
+        case .decl(let decl): return decl
+        default: fatalError()
         }
-        let (node, _) = try! parseNode().parse(rawASTString)
-        let decl = extractDecl(node.attributes[0])
-        XCTAssertEqual(decl.value, "Swift.(file).Collection extension.map")
-        XCTAssertEqual(decl.substitution, "[with (substitution_map generic_signature=<Self, T where Self : Collection>  (substitution Self -> [Int]) (substitution T -> String))]")
-        print(node.attributes[1])
+    }
+
+    func testExample() {
+        let (node, tail) = try! parseNode().parse(rawASTString)
     }
 
     func testParseDecl() throws {
@@ -46,6 +43,14 @@ class ParseNodeTests: XCTestCase {
             let (node, tail) = try parseDecl().parse(content)
             XCTAssertEqual(node.value, "Swift.(file).Collection extension.map")
             XCTAssertEqual(tail, "")
+        }
+
+        do {
+            let content = "(declref_expr decl=Swift.(file).Collection extension.map [with (substitution_map generic_signature=<Self, T where Self : Collection> (substitution Self -> [Int]) (substitution T -> String))])"
+            let (node, _) = try! parseNode().parse(content)
+            let decl = extractDecl(node.attributes[0])
+            XCTAssertEqual(decl.value, "Swift.(file).Collection extension.map")
+            XCTAssertEqual(decl.substitution, "[with (substitution_map generic_signature=<Self, T where Self : Collection>  (substitution Self -> [Int]) (substitution T -> String))]")
         }
     }
 
@@ -114,8 +119,7 @@ class ParseNodeTests: XCTestCase {
         let expectedNode = RawNode(
             name: "top_level_code_decl",
             value: nil,
-            attributes: [attribute],
-            children: []
+            attributeOrNode: [.attribute(attribute)]
         )
         XCTAssertEqual(node, expectedNode)
     }

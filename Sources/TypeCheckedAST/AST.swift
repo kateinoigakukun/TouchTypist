@@ -2,8 +2,23 @@
 struct RawNode {
     let name: String
     let value: String?
-    let attributes: [Attribute]
-    let children: [RawNode]
+    let attributeOrNode: [AttributeOrNode]
+    var attributes: [Attribute] {
+        return attributeOrNode.compactMap {
+            switch $0 {
+            case .attribute(let attr): return attr
+            case .node: return nil
+            }
+        }
+    }
+    var children: [RawNode] {
+        return attributeOrNode.compactMap {
+            switch $0 {
+            case .attribute: return nil
+            case .node(let node): return node
+            }
+        }
+    }
 }
 
 struct Range {
@@ -19,6 +34,11 @@ struct Range {
 struct Decl {
     let value: String
     let substitution: String?
+}
+
+enum AttributeOrNode: Equatable {
+    case attribute(Attribute)
+    case node(RawNode)
 }
 
 enum Attribute {

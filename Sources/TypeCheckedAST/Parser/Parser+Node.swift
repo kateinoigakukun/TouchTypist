@@ -8,15 +8,23 @@
 import Curry
 
 func parseNode() -> Parser<RawNode> {
-    return curry(RawNode.init)
-        <^> token("(") *> keyword()
-        <*> skipSpaces() *> (
-            Optional.some
-                <^> stringLiteral()
-                <|> Parser.pure(nil)
+    return token("(") *>
+        (curry(RawNode.init)
+            <^> keyword()
+            <*> skipSpaces() *> (
+                Optional.some
+                    <^> stringLiteral()
+                    <|> Parser.pure(nil)
+            )
+            <*> many(
+                skipSpaces()
+                    *> ((AttributeOrNode.attribute <^> parseAttribute())
+                        <|> (AttributeOrNode.node <^> parseNode()))
+                    <* skipSpaces()
+            )
+//            <*> skipSpaces() *> many(skipSpaces() *> parseNode()) <* skipSpaces()
         )
-        <*> many(skipSpaces() *> parseAttribute())
-        <*> skipSpaces() *> many(skipSpaces() *> parseNode()) <* skipSpaces() <* token(")")
+        <* skipSpaces() <* token(")")
 }
 
 func parseAttribute() -> Parser<Attribute> {
@@ -39,10 +47,12 @@ func parseUnknown() -> Parser<UnknownAttribute> {
         <*> (Optional.some <^> keyword() <|> .pure(nil))
 }
 
-func parseDecl() -> Parser<Decl> {
-    func declSignatureRec() -> Parser<[String]> {
-        let join4: (String, String, String, String) -> String = { $0 + $1 + $2 + $3 }
-        let join3: (String, String, String) -> String = { $0 + $1 + $2 }
+let join4: (String, String, String, String) -> String = { $0 + $1 + $2 + $3 }
+let join3: (String, String, String) -> String = { $0 + $1 + $2 }
+let join2: (String, String) -> String = { $0 + $1 }
+
+func declSignature() -> Parser<String> {
+    func rec() -> Parser<[String]> {
         let word = (
             curry(join4)
                 <^> keyword()
@@ -59,14 +69,14 @@ func parseDecl() -> Parser<Decl> {
             <|> keyword()
         return cons
             <^> (curry({ $0 + $1 }) <^> token(".") <*> word)
-            <*> (declSignatureRec() <|> Parser.pure([]))
+            <*> (rec() <|> Parser.pure([]))
     }
+    return curry(Array.joined)
+        <^> (cons <^> keyword() <*> rec())
+        <*> Parser.pure("")
+}
 
-    func declSignature() -> Parser<String> {
-        return curry(Array.joined)
-            <^> (cons <^> keyword() <*> declSignatureRec())
-            <*> Parser.pure("")
-    }
+func parseDecl() -> Parser<Decl> {
     return curry(Decl.init) <^>
         (
             curry(Array.joined)
@@ -81,9 +91,6 @@ func parseDecl() -> Parser<Decl> {
 }
 
 func parseDeclSubstitution() -> Parser<String> {
-    let join4: (String, String, String, String) -> String = { $0 + $1 + $2 + $3 }
-    let join3: (String, String, String) -> String = { $0 + $1 + $2 }
-    let join2: (String, String) -> String = { $0 + $1 }
     func parenNest() -> Parser<String> {
         return { $0.joined(separator: "") } <^> many(
             skipSpaces()
