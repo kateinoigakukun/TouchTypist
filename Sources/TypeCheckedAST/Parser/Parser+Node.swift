@@ -9,22 +9,22 @@ import Curry
 
 func parseNode() -> Parser<RawNode> {
     let node = (curry(RawNode.init)
-        <^> debugPrint() *> keyword()
-        <*> skipSpaces() *> (
-            Optional.some
-                <^> stringLiteral()
-                <|> Parser.pure(nil)
-        )
+        <^> keyword()
+        <*> skipSpaces() *> parseNodeValue()
         <*> many(
-            skipSpaces()
-                *> (
-                    (AttributeOrNode.attribute <^> parseAttribute())
-                        <|> (AttributeOrNode.node <^> parseNode())
-                )
-                <* skipSpaces()
+            skipSpaces() *> parseAttributeOrNode() <* skipSpaces()
         )
     )
     return token("(") *> node <* skipSpaces() <* token(")")
+}
+
+func parseNodeValue() -> Parser<String?> {
+    return Optional.some <^> stringLiteral() <|> Parser.pure(nil)
+}
+
+func parseAttributeOrNode() -> Parser<AttributeOrNode> {
+    return (AttributeOrNode.attribute <^> parseAttribute())
+       <|> (AttributeOrNode.node <^> parseNode())
 }
 
 func parseAttribute() -> Parser<Attribute> {
@@ -37,24 +37,21 @@ func parseAttribute() -> Parser<Attribute> {
             curry(Attribute.decl) <^> token("decl=") *> parseDecl(),
             Attribute.__unknown <^> parseUnknown(),
         ]
-    ) <* debugPrint()
+    )
 }
 
 func parseUnknown() -> Parser<UnknownAttribute> {
     let value = (String.init(describing:) <^> parseRange())
-        <|> debugPrint("Unknown 1") *> (String.init(describing:) <^> parseTypeName())
-        <|> debugPrint("Unknown 2") *> (String.init(describing:) <^> parsePoint())
-        <|> debugPrint("Unknown 3") *> (String.init(describing:) <^> parseElements())
-        <|> debugPrint("Unknown 4") *> (String.init(describing:) <^> parseDecl())
-        <|> debugPrint("Unknown 5") *> satisfyString(predicate: {
+        <|> (String.init(describing:) <^> parseTypeName())
+        <|> (String.init(describing:) <^> parsePoint())
+        <|> (String.init(describing:) <^> parseElements())
+        <|> (String.init(describing:) <^> parseDecl())
+        <|> satisfyString(predicate: {
             return $0 != " " && $0 != "(" && $0 != ")" && $0 != "\n"
         })
     return curry(UnknownAttribute.init)
         <^> keyword()
-        <*> (
-            (Optional.some <^> (token("=") *> value))
-                <|> .pure(nil)
-    )
+        <*> (Optional.some <^> (token("=") *> value) <|> .pure(nil))
 }
 
 let join4: (String, String, String, String) -> String = { $0 + $1 + $2 + $3 }
@@ -89,17 +86,10 @@ func declSignature() -> Parser<String> {
 }
 
 func parseDecl() -> Parser<Decl> {
-    return curry(Decl.init) <^>
-        (
-            curry(Array.joined)
-                <^> many1(skipSpaces() *> declSignature() <* skipSpaces())
-                <*> Parser.pure(" ")
-        )
-        <*> skipSpaces()
-        *> (
-            (Optional.some <^> parseDeclSubstitution())
-                <|> Parser.pure(nil)
-    )
+    let signatures = many1(skipSpaces() *> declSignature() <* skipSpaces())
+    return curry(Decl.init)
+        <^> (curry({ $0.joined(separator: " ") }) <^> signatures) <* skipSpaces()
+        <*> (Optional.some <^> parseDeclSubstitution() <|> Parser.pure(nil))
 }
 
 func parseDeclSubstitution() -> Parser<String> {
