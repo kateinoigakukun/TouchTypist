@@ -9,26 +9,43 @@ import XCTest
 @testable import TypeCheckedAST
 
 let rawASTString = """
-(declref_expr decl=Swift.(file).Int.init(_builtinIntegerLiteral:))
+(declref_expr decl=Swift.(file).Collection extension.map [with (substitution_map generic_signature=<Self, T where Self : Collection> (substitution Self -> [Int]) (substitution T -> String))] function_ref=single)
 """
 
 class ParseNodeTests: XCTestCase {
 
     func testExample() throws {
+        func extractDecl(_ attr: Attribute) -> Decl {
+            switch attr {
+            case .decl(let decl): return decl
+            default: fatalError()
+            }
+        }
         let (node, _) = try! parseNode().parse(rawASTString)
-//        XCTAssertEqual(node.children.count, 2)
+        let decl = extractDecl(node.attributes[0])
+        XCTAssertEqual(decl.value, "Swift.(file).Collection extension.map")
+        XCTAssertEqual(decl.substitution, "[with (substitution_map generic_signature=<Self, T where Self : Collection>  (substitution Self -> [Int]) (substitution T -> String))]")
+        print(node.attributes[1])
     }
 
     func testParseDecl() throws {
-//        do {
-//            let content = "Swift.(file).Collection extension.map [with (substitution_map generic_signature=<Self, T where Self : Collection> (substitution Self -> [Int]) (substitution T -> String))]"
-//            let (node, _) = try! parseDecl().parse(content)
-//            XCTAssertEqual(node.value, "Swift.(file).Collection extension.map ")
-//        }
+        do {
+            let content = "Swift.(file).Collection"
+            let (node, _) = try parseDecl().parse(content)
+            XCTAssertEqual(node.value, "Swift.(file).Collection")
+        }
         do {
             let content = "Swift.(file).Int.init(_builtinIntegerLiteral:)"
-            let (node, _) = try! parseDecl().parse(content)
+            let (node, tail) = try parseDecl().parse(content)
             XCTAssertEqual(node.value, "Swift.(file).Int.init(_builtinIntegerLiteral:)")
+            XCTAssertEqual(tail, "")
+        }
+
+        do {
+            let content = "Swift.(file).Collection extension.map"
+            let (node, tail) = try parseDecl().parse(content)
+            XCTAssertEqual(node.value, "Swift.(file).Collection extension.map")
+            XCTAssertEqual(tail, "")
         }
     }
 

@@ -18,6 +18,7 @@ struct Range {
 
 struct Decl {
     let value: String
+    let substitution: String?
 }
 
 enum Attribute {
