@@ -8,7 +8,39 @@
 import XCTest
 @testable import TypeCheckedAST
 
+let rawASTString = """
+(declref_expr decl=Swift.(file).Int.init(_builtinIntegerLiteral:))
+"""
+
 class ParseNodeTests: XCTestCase {
+
+    func testExample() throws {
+        let (node, _) = try! parseNode().parse(rawASTString)
+//        XCTAssertEqual(node.children.count, 2)
+    }
+
+    func testParseDecl() throws {
+//        do {
+//            let content = "Swift.(file).Collection extension.map [with (substitution_map generic_signature=<Self, T where Self : Collection> (substitution Self -> [Int]) (substitution T -> String))]"
+//            let (node, _) = try! parseDecl().parse(content)
+//            XCTAssertEqual(node.value, "Swift.(file).Collection extension.map ")
+//        }
+        do {
+            let content = "Swift.(file).Int.init(_builtinIntegerLiteral:)"
+            let (node, _) = try! parseDecl().parse(content)
+            XCTAssertEqual(node.value, "Swift.(file).Int.init(_builtinIntegerLiteral:)")
+        }
+    }
+
+    func testParseChildren() throws {
+        let content = """
+        (source_file "foo.swift"
+            (top_level_code_decl range=[foo.swift:1:1 - line:3:1] )
+            (top_level_code_decl range=[foo.swift:1:1 - line:3:1] ))
+        """
+        let (node, _) = try parseNode().parse(content)
+        XCTAssertEqual(node.children.count, 2)
+    }
 
     func testParseValue() throws {
         let content = """

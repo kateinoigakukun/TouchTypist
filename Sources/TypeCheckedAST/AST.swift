@@ -16,6 +16,9 @@ struct Range {
     let end: Point
 }
 
+struct Decl {
+    let value: String
+}
 
 enum Attribute {
     case range(Range)
@@ -23,7 +26,9 @@ enum Attribute {
     case location(Range.Point)
     case argLabels(String)
     case nothrow
+    case decl(Decl)
     case __unknown(UnknownAttribute)
+    case __unknownMark(String)
 }
 
 struct UnknownAttribute {
@@ -34,5 +39,6 @@ struct UnknownAttribute {
 extension RawNode: Equatable {}
 extension Range: Equatable {}
 extension Range.Point: Equatable {}
+extension Decl: Equatable {}
 extension UnknownAttribute: Equatable {}
 extension Attribute: Equatable {}

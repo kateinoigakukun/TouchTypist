@@ -9,7 +9,9 @@
 enum ChoiceError: Error { case noMatch }
 
 func choice<T>(_ ps: [Parser<T>]) -> Parser<T> {
-    if ps.isEmpty { return Parser.fail(ChoiceError.noMatch) }
+    if ps.isEmpty {
+        return Parser.fail(ChoiceError.noMatch)
+    }
     var ps = ps
     let p = ps.removeFirst()
     return p <|> choice(ps)
@@ -23,7 +25,7 @@ func many1<T>(_ p: Parser<T>) -> Parser<[T]> {
     return cons <^> p <*> many(p)
 }
 
-enum SatisfyError: Error { case invalid, empty }
+enum SatisfyError: Error { case invalid(head: String.Element, input: String), empty }
 
 func satisfy(predicate: @escaping (Character) -> Bool) -> Parser<Character> {
     return Parser { input in
@@ -33,8 +35,16 @@ func satisfy(predicate: @escaping (Character) -> Bool) -> Parser<Character> {
         var input = input
         let head = input.removeFirst()
         guard predicate(head) else {
-            throw SatisfyError.invalid
+            throw SatisfyError.invalid(head: head, input: input)
         }
         return (head, input)
+    }
+}
+
+
+func debugPrint() -> Parser<Void> {
+    return Parser {
+        print("current: \($0)")
+        return ((), $0)
     }
 }

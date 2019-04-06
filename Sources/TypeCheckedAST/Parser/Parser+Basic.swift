@@ -14,7 +14,7 @@ func char(_ c: Character) -> Parser<Character> {
 }
 
 func skipSpaces() -> Parser<Void> {
-    return void <^> many(char(" "))
+    return void <^> many(char(" ") <|> char("\n"))
 }
 
 func digit() -> Parser<Character> {
@@ -25,19 +25,32 @@ func number() -> Parser<Int> {
     return many(digit()).map { Int(String($0))! }
 }
 
-func token(_ string: String) -> Parser<String> {
-    enum TokenError: Error { case not(String, input: String) }
+func token(_ string: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) -> Parser<String> {
+    enum TokenError: Error { case not(String, input: String, file: StaticString, function: StaticString, line: Int) }
     return Parser { input1 in
         guard input1.hasPrefix(string) else {
-            throw TokenError.not(string, input: input1)
+            throw TokenError.not(string, input: input1, file: file, function: function, line: line)
         }
         let input2 = input1.dropFirst(string.count)
         return (string, String(input2))
     }
 }
 
+func registeredSymbol() -> [Character] {
+    return ["(", ")", "=", "[", "]", "."]
+}
+
+enum KeywordError: Error { case empty }
 func keyword() -> Parser<String> {
-    return many(satisfy(predicate: { $0 != " " })).map { String($0) }
+    func notEmpty(_ s: String) -> Parser<String> {
+        guard !s.isEmpty else {
+            return .fail(KeywordError.empty)
+        }
+        return .pure(s)
+    }
+    return satisfyString(predicate: {
+        !(registeredSymbol() + [" ", "\n"]).contains($0)
+    }) >>- notEmpty
 }
 
 func stringLiteral() -> Parser<String> {
