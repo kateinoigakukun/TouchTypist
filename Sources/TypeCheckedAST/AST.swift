@@ -49,7 +49,6 @@ enum Attribute {
     case nothrow
     case decl(Decl)
     case __unknown(UnknownAttribute)
-    case __unknownMark(String)
 }
 
 struct UnknownAttribute {

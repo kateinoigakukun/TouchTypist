@@ -42,9 +42,20 @@ func satisfy(predicate: @escaping (Character) -> Bool) -> Parser<Character> {
 }
 
 
-func debugPrint() -> Parser<Void> {
+func debugPrint(_ id: String = " ") -> Parser<Void> {
     return Parser {
-        print("current: \($0)")
+        print("- [\(id)]: \($0)")
         return ((), $0)
+    }
+}
+
+func debugPrintIfThrow<T>(_ id: String = " ", _ p: Parser<T>) -> Parser<T> {
+    return Parser {
+        do {
+            return try p.parse($0)
+        } catch {
+            print("- [\(id)]: \(error)")
+            throw error
+        }
     }
 }

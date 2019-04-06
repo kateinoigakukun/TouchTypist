@@ -6,7 +6,12 @@
 //
 
 func satisfyString(predicate: @escaping (Character) -> Bool) -> Parser<String> {
-    return many(satisfy(predicate: predicate)).map { String($0) }
+    return many(satisfy(predicate: {
+        if (predicate($0) && $0 == ")") {
+            return predicate($0)
+        }
+        return predicate($0)
+    })).map { String($0) }
 }
 
 func char(_ c: Character) -> Parser<Character> {
@@ -22,7 +27,7 @@ func digit() -> Parser<Character> {
 }
 
 func number() -> Parser<Int> {
-    return many(digit()).map { Int(String($0))! }
+    return many1(digit()).map { Int(String($0))! }
 }
 
 func token(_ string: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) -> Parser<String> {

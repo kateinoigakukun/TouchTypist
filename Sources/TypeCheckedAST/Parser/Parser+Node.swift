@@ -8,23 +8,23 @@
 import Curry
 
 func parseNode() -> Parser<RawNode> {
-    return token("(") *>
-        (curry(RawNode.init)
-            <^> keyword()
-            <*> skipSpaces() *> (
-                Optional.some
-                    <^> stringLiteral()
-                    <|> Parser.pure(nil)
-            )
-            <*> many(
-                skipSpaces()
-                    *> ((AttributeOrNode.attribute <^> parseAttribute())
-                        <|> (AttributeOrNode.node <^> parseNode()))
-                    <* skipSpaces()
-            )
-//            <*> skipSpaces() *> many(skipSpaces() *> parseNode()) <* skipSpaces()
+    let node = (curry(RawNode.init)
+        <^> keyword()
+        <*> skipSpaces() *> (
+            Optional.some
+                <^> stringLiteral()
+                <|> Parser.pure(nil)
         )
-        <* skipSpaces() <* token(")")
+        <*> many(
+            skipSpaces()
+                *> debugPrintIfThrow(#function, (
+                    (AttributeOrNode.attribute <^> parseAttribute())
+                        <|> (AttributeOrNode.node <^> parseNode())
+                ))
+                <* skipSpaces()
+        )
+    )
+    return token("(") *> node <* skipSpaces() <* token(")")
 }
 
 func parseAttribute() -> Parser<Attribute> {
@@ -36,15 +36,25 @@ func parseAttribute() -> Parser<Attribute> {
             const(Attribute.nothrow) <^> token("nothrow"),
             curry(Attribute.decl) <^> token("decl=") *> parseDecl(),
             Attribute.__unknown <^> parseUnknown(),
-            Attribute.__unknownMark <^> keyword()
         ]
     )
 }
 
 func parseUnknown() -> Parser<UnknownAttribute> {
+    let value = (String.init(describing:) <^> parseRange())
+        <|> (String.init(describing:) <^> parseTypeName())
+        <|> (String.init(describing:) <^> parsePoint())
+        <|> (String.init(describing:) <^> parseElements())
+        <|> (String.init(describing:) <^> parseDecl())
+        <|> satisfyString(predicate: {
+            return $0 != " " && $0 != "(" && $0 != ")"
+        })
     return curry(UnknownAttribute.init)
-        <^> keyword() <* token("=")
-        <*> (Optional.some <^> keyword() <|> .pure(nil))
+        <^> keyword() <* debugPrint("unknown")
+        <*> (
+            (Optional.some <^> (token("=") *> value))
+                <|> .pure(nil)
+    )
 }
 
 let join4: (String, String, String, String) -> String = { $0 + $1 + $2 + $3 }
@@ -132,4 +142,10 @@ func parsePoint() -> Parser<Range.Point> {
 func parseTypeName() -> Parser<String> {
     let validString = satisfyString(predicate: { $0 != "'" })
     return char("\'") *> validString <* char("\'")
+}
+
+func parseElements() -> Parser<[String]> {
+    return char("[") *>
+        ({ [$0] } <^> satisfyString(predicate: { $0 != "]" }))
+        <* char("]")
 }
