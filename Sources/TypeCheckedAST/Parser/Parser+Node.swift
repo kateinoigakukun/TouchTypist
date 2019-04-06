@@ -59,30 +59,20 @@ let join3: (String, String, String) -> String = { $0 + $1 + $2 }
 let join2: (String, String) -> String = { $0 + $1 }
 
 func declSignature() -> Parser<String> {
-    let word = (
-        curry(join4)
-            <^> keyword()
-            <*> token("(")
-            <*> keyword()
-            <*> token(")")
-        )
-        <|>
-        (
-            curry(join3)
-                <^> token("(")
-                <*> keyword()
-                <*> token(")")
-        )
-        <|> keyword()
+    // foo(arg:)
+    let funcSig = curry(join4) <^> keyword()
+        <*> token("(") <*> keyword() <*> token(")")
+    // (file)
+    let fileSig = curry(join3) <^> token("(")
+        <*> keyword() <*> token(")")
+    let sig = funcSig <|> fileSig <|> keyword()
     func rec() -> Parser<[String]> {
         return cons
-            <^> (curry({ $0 + $1 }) <^> token(".") <*> word)
+            <^> (curry({ $0 + $1 }) <^> token(".") <*> sig)
             <*> (rec() <|> Parser.pure([]))
     }
 
-    return curry(Array.joined)
-        <^> (cons <^> keyword() <*> rec())
-        <*> Parser.pure("")
+    return curry({ $0.joined() }) <^> (cons <^> keyword() <*> rec())
 }
 
 func parseDecl() -> Parser<Decl> {
@@ -93,24 +83,18 @@ func parseDecl() -> Parser<Decl> {
 }
 
 func parseDeclSubstitution() -> Parser<String> {
-    func parenNest() -> Parser<String> {
-        return { $0.joined(separator: "") } <^> many(
-            skipSpaces()
-                *> (
-                    curry(join4)
-                        <^> Parser.pure(" ")
-                        <*> token("(")
-                        <*> satisfyString(predicate: { $0 != "(" && $0 != ")" })
-                        <*> (token(")")
-                            <|> (curry(join2)
-                                <^> parenNest()
-                                <*> (token(")")))
-                    )
-                )
-                <* skipSpaces()
+    // FIXME
+    func parenRec() -> Parser<String> {
+        let parenBox = curry(join4)
+            <^> Parser.pure(" ")
+            <*> token("(")
+            <*> satisfyString(predicate: { $0 != "(" && $0 != ")" })
+            <*> (curry(join2) <^> (parenRec() <|> .pure("")) <*> token(")"))
+        return { $0.joined() } <^> many(
+            skipSpaces() *> parenBox <* skipSpaces()
         )
     }
-    return curry(join3) <^> token("[with") <*> parenNest() <*> token("]")
+    return curry(join3) <^> token("[with") <*> parenRec() <*> token("]")
 }
 
 func parseRange() -> Parser<Range> {
