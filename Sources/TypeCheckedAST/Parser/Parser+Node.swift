@@ -9,22 +9,22 @@ import Curry
 
 func parseNode() -> Parser<RawNode> {
     let node = (curry(RawNode.init)
-        <^> keyword()
-        <*> skipSpaces() *> parseNodeValue()
+        <^> debugPrint() *> keyword()
         <*> many(
-            skipSpaces() *> parseAttributeOrNode() <* skipSpaces()
+            skipSpaces() *> parseAttributeOrNodeOrValue() <* skipSpaces()
         )
     )
     return token("(") *> node <* skipSpaces() <* token(")")
 }
 
-func parseNodeValue() -> Parser<String?> {
-    return Optional.some <^> stringLiteral() <|> Parser.pure(nil)
+func parseNodeValue() -> Parser<String> {
+    return stringLiteral()
 }
 
-func parseAttributeOrNode() -> Parser<AttributeOrNode> {
-    return (AttributeOrNode.attribute <^> parseAttribute())
-       <|> (AttributeOrNode.node <^> parseNode())
+func parseAttributeOrNodeOrValue() -> Parser<AttributeOrNodeOrValue> {
+    return (AttributeOrNodeOrValue.value <^> parseNodeValue())
+        <|> (AttributeOrNodeOrValue.attribute <^> parseAttribute())
+        <|> (AttributeOrNodeOrValue.node <^> parseNode())
 }
 
 func parseAttribute() -> Parser<Attribute> {
@@ -61,7 +61,9 @@ let join2: (String, String) -> String = { $0 + $1 }
 func declSignature() -> Parser<String> {
     // foo(arg:)
     let funcSig = curry(join4) <^> keyword()
-        <*> token("(") <*> keyword() <*> token(")")
+        <*> token("(")
+        <*> (satisfyString(predicate: { $0 != " " && $0 != ")" }))
+        <*> token(")")
     // (file)
     let fileSig = curry(join3) <^> token("(")
         <*> keyword() <*> token(")")
@@ -72,7 +74,12 @@ func declSignature() -> Parser<String> {
             <*> (rec() <|> Parser.pure([]))
     }
 
-    return curry({ $0.joined() }) <^> (cons <^> keyword() <*> rec())
+    let atSig = curry(join2) <^> token("@")
+        <*> ({ $0.description } <^> parsePoint())
+
+    return curry({ $0.joined() + $1 })
+        <^> (cons <^> keyword() <*> rec())
+        <*> (atSig <|> .pure(""))
 }
 
 func parseDecl() -> Parser<Decl> {
@@ -82,18 +89,27 @@ func parseDecl() -> Parser<Decl> {
         <*> (Optional.some <^> parseDeclSubstitution() <|> Parser.pure(nil))
 }
 
-func parseDeclSubstitution() -> Parser<String> {
+func parenRec() -> Parser<String> {
+    let parenContent = satisfyString(predicate: {
+        $0 != "(" && $0 != ")" && $0 != "[" && $0 != "]"
+    })
+    let bracketBox = curry(join3)
+        <^> token("[")
+        <*> parenContent
+        <*> (curry(join3) <^> (parenRec() <|> .pure("")) <*> parenContent <*> token("]"))
+
     // FIXME
-    func parenRec() -> Parser<String> {
-        let parenBox = curry(join4)
-            <^> Parser.pure(" ")
-            <*> token("(")
-            <*> satisfyString(predicate: { $0 != "(" && $0 != ")" })
-            <*> (curry(join2) <^> (parenRec() <|> .pure("")) <*> token(")"))
-        return { $0.joined() } <^> many(
-            skipSpaces() *> parenBox <* skipSpaces()
-        )
-    }
+    let parenBox = curry(join4)
+        <^> Parser.pure(" ")
+        <*> token("(")
+        <*> parenContent
+        <*> (curry(join3) <^> (parenRec() <|> .pure("")) <*> parenContent <*> token(")"))
+    return { $0.joined() } <^> many(
+        skipSpaces() *> (parenBox <|> bracketBox) <* skipSpaces()
+    )
+}
+
+func parseDeclSubstitution() -> Parser<String> {
     return curry(join3) <^> token("[with") <*> parenRec() <*> token("]")
 }
 

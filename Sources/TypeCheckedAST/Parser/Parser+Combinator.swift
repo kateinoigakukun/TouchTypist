@@ -41,10 +41,11 @@ func satisfy(predicate: @escaping (Character) -> Bool) -> Parser<Character> {
     }
 }
 
+var _debugPrintStack: [String] = []
 
 func debugPrint(_ id: String = " ") -> Parser<Void> {
     return Parser {
-        print("- [\(id)]: \($0)")
+        _debugPrintStack.append("- [\(id)]: \($0)")
         return ((), $0)
     }
 }
