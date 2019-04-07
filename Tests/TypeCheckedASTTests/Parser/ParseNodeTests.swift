@@ -25,6 +25,26 @@ class ParseNodeTests: XCTestCase {
         }
     }
 
+    func testExample9() throws {
+        let content = """
+        (string_literal_expr value="Class, computed property and `didSet` are not supported." builtin_initializer=Swift.(file).String extension.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:) initializer=**NULL**)
+        """
+        try! parseNode().parse(content)
+    }
+
+    func testExample8() throws {
+        let content = """
+        (normal_conformance type=InjectionError protocol=Error
+            (value req=_getEmbeddedNSError() witness=Swift.(file).Error extension._getEmbeddedNSError()
+            )
+        )
+        """
+        _ = try! parseUnknown().parse("req=_getEmbeddedNSError()")
+        _ = try! unknownValue().parse("_getEmbeddedNSError()")
+        _ = try! parseNode().parse("(value req=_getEmbeddedNSError() witness=Swift.(file).Error extension._getEmbeddedNSError())")
+        _ = try! parseNode().parse(content)
+    }
+
     func testExample7() throws {
         let content = "(member_ref_expr decl=Swift.(file).Sequence extension.lazy [with (substitution_map generic_signature=<Self where Self : Sequence> (substitution Self -> [StubProvider]))])"
         let (_, tail) = try! parseNode().parse(content)

@@ -40,15 +40,41 @@ func parseAttribute() -> Parser<Attribute> {
     )
 }
 
+func unknownValue() -> Parser<String> {
+    func shouldBeParenContent(c: Character) -> Bool {
+        return c != "(" && c != ")" && c != "[" && c != "]" && c != " " && c != "\n"
+    }
+    let parenContent: Parser<String> = satisfyString(predicate: {
+        return shouldBeParenContent(c: $0)
+        //            $0 != "(" && $0 != ")" && $0 != "[" && $0 != "]" && $0 != " " && $0 != "\n"
+    })
+    let bracketBox = curry(join4)
+        <^> parenContent
+        <*> token("[")
+        <*> parenContent
+        <*> (curry(join3) <^> (unknownValue() <|> .pure("")) <*> parenContent <*> token("]"))
+
+    // FIXME
+    let parenBox = curry(join4)
+        <^> parenContent
+        <*> token("(")
+        <*> parenContent
+        <*> (curry(join3) <^> (unknownValue() <|> .pure("")) <*> parenContent <*> token(")"))
+    return ({ $0.joined() } <^> many1(
+        (parenBox <|> bracketBox)
+        )) <|> satisfyString(predicate: {
+            return $0 != " " && $0 != "(" && $0 != ")" && $0 != "\n"
+        })
+}
+
 func parseUnknown() -> Parser<UnknownAttribute> {
     let value = (String.init(describing:) <^> parseRange())
         <|> (String.init(describing:) <^> parseTypeName())
         <|> (String.init(describing:) <^> parsePoint())
         <|> (String.init(describing:) <^> parseElements())
         <|> (String.init(describing:) <^> parseDecl())
-        <|> satisfyString(predicate: {
-            return $0 != " " && $0 != "(" && $0 != ")" && $0 != "\n"
-        })
+        <|> stringLiteral()
+        <|> unknownValue()
     return curry(UnknownAttribute.init)
         <^> keyword()
         <*> (Optional.some <^> (token("=") *> value) <|> .pure(nil))
