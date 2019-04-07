@@ -25,6 +25,12 @@ class ParseNodeTests: XCTestCase {
         }
     }
 
+    func testExample10() throws {
+        let content = "(declref_expr type='(UInt8.Type) -> (UInt8, Int) -> Bool' location=/Users/yuutas4/projects/StubKit/Sources/StubKit/Provider/EnumStubProvider.swift:24:37 range=[/Users/yuutas4/projects/StubKit/Sources/StubKit/Provider/EnumStubProvider.swift:24:37 - line:24:37] decl=Swift.(file).BinaryInteger extension.== [with (substitution_map generic_signature=<Self, Other where Self : BinaryInteger, Other : BinaryInteger> (substitution Self -> UInt8) (substitution Other -> Int))] function_ref=unapplied)"
+        _ = try parseDecl().parse("Swift.(file).BinaryInteger extension.== [with (substitution_map generic_signature=<Self, Other where Self : BinaryInteger, Other : BinaryInteger> (substitution Self -> UInt8) (substitution Other -> Int))]")
+        _ = try parseNode().parse(content)
+    }
+
     func testExample9() throws {
         let content = """
         (string_literal_expr value="Class, computed property and `didSet` are not supported." builtin_initializer=Swift.(file).String extension.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:) initializer=**NULL**)

@@ -46,7 +46,6 @@ func unknownValue() -> Parser<String> {
     }
     let parenContent: Parser<String> = satisfyString(predicate: {
         return shouldBeParenContent(c: $0)
-        //            $0 != "(" && $0 != ")" && $0 != "[" && $0 != "]" && $0 != " " && $0 != "\n"
     })
     let bracketBox = curry(join4)
         <^> parenContent
@@ -93,7 +92,10 @@ func declSignature() -> Parser<String> {
     // (file)
     let fileSig = curry(join3) <^> token("(")
         <*> keyword() <*> token(")")
-    let sig = funcSig <|> fileSig <|> keyword()
+    let sig = funcSig <|> fileSig
+        <|> (satisfyString(predicate: {
+            !["(", ")", "[", "]", ".", " ", "\n"].contains($0)
+        }))
     func rec() -> Parser<[String]> {
         return cons
             <^> (curry(join2) <^> token(".") <*> sig)
