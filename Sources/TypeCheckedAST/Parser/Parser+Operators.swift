@@ -36,7 +36,7 @@ infix operator *> : ApplicativeSequencePrecedence
 infix operator <|> : AlternativePrecedence
 infix operator >>- : MonadicPrecedenceLeft
 
-
+@inline(__always)
 func <|> <T>(a: Parser<T>, b: @autoclosure @escaping () -> Parser<T>) -> Parser<T> {
     return Parser { input in
         do {
@@ -47,22 +47,27 @@ func <|> <T>(a: Parser<T>, b: @autoclosure @escaping () -> Parser<T>) -> Parser<
     }
 }
 
+@inline(__always)
 func <*> <A, B>(a: Parser<(A) -> B>, b: @autoclosure @escaping () -> Parser<A>) -> Parser<B> {
     return a.flatMap { f in b().map { f($0) } }
 }
 
+@inline(__always)
 func <^> <A, B>(f: @escaping (A) -> B, p: Parser<A>) -> Parser<B> {
     return p.map(f)
 }
 
+@inline(__always)
 func >>- <A, B>(p: Parser<A>, f: @escaping (A) -> Parser<B>) -> Parser<B> {
     return p.flatMap(f)
 }
 
+@inline(__always)
 func *> <A, B>(a: Parser<A>, b: Parser<B>) -> Parser<B> {
     return const(id) <^> a <*> b
 }
 
+@inline(__always)
 func <* <A, B>(a: Parser<A>, b: Parser<B>) -> Parser<A> {
     return const <^> a <*> b
 }

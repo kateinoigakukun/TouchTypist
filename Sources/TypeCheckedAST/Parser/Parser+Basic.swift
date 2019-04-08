@@ -45,6 +45,13 @@ func registeredSymbol() -> [Character] {
     return ["(", ")", "=", "[", "]", "."]
 }
 
+func notEmpty(_ s: String) -> Parser<String> {
+    guard !s.isEmpty else {
+        return .fail(KeywordError.empty)
+    }
+    return .pure(s)
+}
+
 enum KeywordError: Error { case empty }
 func keyword() -> Parser<String> {
     func notEmpty(_ s: String) -> Parser<String> {

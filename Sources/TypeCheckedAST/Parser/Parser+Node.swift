@@ -41,8 +41,12 @@ func parseAttribute() -> Parser<Attribute> {
 }
 
 func unknownValue() -> Parser<String> {
+    // FIXME
     func shouldBeParenContent(c: Character) -> Bool {
-        return c != "(" && c != ")" && c != "[" && c != "]" && c != " " && c != "\n"
+        return c != "(" && c != ")"
+            && c != "[" && c != "]"
+            && c != "<" && c != ">"
+            && c != " " && c != "\n"
     }
     let parenContent: Parser<String> = satisfyString(predicate: {
         return shouldBeParenContent(c: $0)
@@ -52,7 +56,11 @@ func unknownValue() -> Parser<String> {
         <*> token("[")
         <*> parenContent
         <*> (curry(join3) <^> (unknownValue() <|> .pure("")) <*> parenContent <*> token("]"))
-
+    let thanBox = curry(join4)
+        <^> parenContent
+        <*> token("<")
+        <*> parenContent
+        <*> (curry(join3) <^> (unknownValue() <|> .pure("")) <*> parenContent <*> token(">"))
     // FIXME
     let parenBox = curry(join4)
         <^> parenContent
@@ -60,7 +68,7 @@ func unknownValue() -> Parser<String> {
         <*> parenContent
         <*> (curry(join3) <^> (unknownValue() <|> .pure("")) <*> parenContent <*> token(")"))
     return ({ $0.joined() } <^> many1(
-        (parenBox <|> bracketBox)
+        (parenBox <|> bracketBox <|> thanBox)
         )) <|> satisfyString(predicate: {
             return $0 != " " && $0 != "(" && $0 != ")" && $0 != "\n"
         })
@@ -75,7 +83,9 @@ func parseUnknown() -> Parser<UnknownAttribute> {
         <|> stringLiteral()
         <|> unknownValue()
     return curry(UnknownAttribute.init)
-        <^> keyword()
+        <^> (satisfyString(predicate: {
+            !["(", ")", "=", "[", "]", " ", "\n"].contains($0)
+        }) >>- notEmpty)
         <*> (Optional.some <^> (token("=") *> value) <|> .pure(nil))
 }
 
