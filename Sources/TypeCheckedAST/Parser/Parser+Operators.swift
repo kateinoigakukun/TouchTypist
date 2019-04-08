@@ -47,9 +47,16 @@ func <|> <T>(a: Parser<T>, b: @autoclosure @escaping () -> Parser<T>) -> Parser<
     }
 }
 
+import Foundation
+
 @inline(__always)
 func <*> <A, B>(a: Parser<(A) -> B>, b: @autoclosure @escaping () -> Parser<A>) -> Parser<B> {
-    return a.flatMap { f in b().map { f($0) } }
+//    return a.flatMap { f in b().map { f($0) } }
+    return Parser<B> { content in
+        let (f, tailA) = try a.parse(content)
+        let (arg, tailB) = try b().parse(tailA)
+        return (f(arg), tailB)
+    }
 }
 
 @inline(__always)
@@ -64,10 +71,19 @@ func >>- <A, B>(p: Parser<A>, f: @escaping (A) -> Parser<B>) -> Parser<B> {
 
 @inline(__always)
 func *> <A, B>(a: Parser<A>, b: Parser<B>) -> Parser<B> {
-    return const(id) <^> a <*> b
+//    return const(id) <^> a <*> b
+    return Parser<B> { content in
+        let (_, tailA) = try a.parse(content)
+        return try b.parse(tailA)
+    }
 }
 
 @inline(__always)
 func <* <A, B>(a: Parser<A>, b: Parser<B>) -> Parser<A> {
-    return const <^> a <*> b
+//    return const <^> a <*> b
+    return Parser<A> { content in
+        let (resultA, tailA) = try a.parse(content)
+        let (_, tailB) = try b.parse(tailA)
+        return (resultA, tailB)
+    }
 }
