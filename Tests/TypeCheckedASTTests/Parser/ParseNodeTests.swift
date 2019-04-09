@@ -60,13 +60,13 @@ class ParseNodeTests: XCTestCase {
     func testExample7() throws {
         let content = "(member_ref_expr decl=Swift.(file).Sequence extension.lazy [with (substitution_map generic_signature=<Self where Self : Sequence> (substitution Self -> [StubProvider]))])"
         let (_, tail) = try! parseNode().parse(content)
-        XCTAssertEqual(tail.count, 0, tail)
+        XCTAssertEqual(tail.count, 0, String(tail))
     }
 
     func testExample6() throws {
         let content = "decl=Swift.(file).Array extension.init(arrayLiteral:) [with (substitution_map generic_signature=<Element> (substitution Element -> (inout T) throws -> Void))]"
         let (_, tail) = try parseUnknown().parse(content)
-        XCTAssertEqual(tail.count, 0, tail)
+        XCTAssertEqual(tail.count, 0, String(tail))
     }
 
     func testExample5() throws {
@@ -250,4 +250,9 @@ class ParseNodeTests: XCTestCase {
         )
         XCTAssertEqual(node, expectedNode)
     }
+}
+
+
+func XCTAssertEqual(_ expression1: @autoclosure () throws -> String.UnicodeScalarView, _ expression2: @autoclosure () throws -> String, _ message: @autoclosure () -> String = "", file: StaticString = #file, line: UInt = #line) {
+    XCTAssertEqual(try String(expression1()), try expression2())
 }

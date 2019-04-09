@@ -6,7 +6,12 @@
 //
 
 struct Parser<T> {
-    let parse: (String) throws -> (T, String)
+    typealias Input = String.UnicodeScalarView
+    let parse: (Input) throws -> (T, Input)
+
+    func parse(_ string: String) throws -> (T, Input) {
+        return try self.parse(string.unicodeScalars)
+    }
 
     @inline(__always)
     func map<U>(_ transformer: @escaping (T) throws -> U) -> Parser<U> {

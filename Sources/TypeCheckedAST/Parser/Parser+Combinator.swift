@@ -36,9 +36,11 @@ func many1<T>(_ p: Parser<T>) -> Parser<[T]> {
     }
 }
 
-enum SatisfyError: Error { case invalid(head: String.Element, input: String), empty }
+enum SatisfyError: Error {
+    case invalid(head: Unicode.Scalar, input: String.UnicodeScalarView), empty
+}
 
-func satisfy(predicate: @escaping (Character) -> Bool) -> Parser<Character> {
+func satisfy(predicate: @escaping (Unicode.Scalar) -> Bool) -> Parser<Unicode.Scalar> {
     return Parser { input in
         guard !input.isEmpty else {
             throw SatisfyError.empty
