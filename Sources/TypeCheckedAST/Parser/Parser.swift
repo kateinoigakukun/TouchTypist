@@ -9,6 +9,7 @@ struct Parser<T> {
     typealias Input = String.UnicodeScalarView
     let parse: (Input) throws -> (T, Input)
 
+    @inline(__always)
     func parse(_ string: String) throws -> (T, Input) {
         return try self.parse(string.unicodeScalars)
     }

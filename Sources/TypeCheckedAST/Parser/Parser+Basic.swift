@@ -6,12 +6,8 @@
 //
 
 func satisfyString(predicate: @escaping (Unicode.Scalar) -> Bool) -> Parser<String.UnicodeScalarView> {
-    return many(satisfy(predicate: {
-        if (predicate($0) && $0 == ")") {
-            return predicate($0)
-        }
-        return predicate($0)
-    })).map { String.UnicodeScalarView($0) }
+    return many(satisfy(predicate: { predicate($0) }))
+        .map { String.UnicodeScalarView($0) }
 }
 
 func char(_ c: Unicode.Scalar) -> Parser<Unicode.Scalar> {

@@ -9,12 +9,19 @@
 enum ChoiceError: Error { case noMatch }
 
 func choice<T>(_ ps: [Parser<T>]) -> Parser<T> {
-    if ps.isEmpty {
-        return Parser.fail(ChoiceError.noMatch)
+//    if ps.isEmpty {
+//        return Parser.fail(ChoiceError.noMatch)
+//    }
+//    var ps = ps
+//    let p = ps.removeFirst()
+//    return p <|> choice(ps)
+    return Parser { content in
+        for p in ps {
+            guard let r = try? p.parse(content) else { continue }
+            return r
+        }
+        throw ChoiceError.noMatch
     }
-    var ps = ps
-    let p = ps.removeFirst()
-    return p <|> choice(ps)
 }
 
 func many<T>(_ p: Parser<T>) -> Parser<[T]> {
