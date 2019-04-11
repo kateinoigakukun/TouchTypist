@@ -7,6 +7,9 @@ let package = Package(
         .library(
             name: "SwiftTypeInjector",
             targets: ["SwiftTypeInjector"]),
+        .executable(
+            name: "benchmark",
+            targets: ["Benchmark"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax.git", .exact("0.50000.0")),
@@ -14,6 +17,9 @@ let package = Package(
         .package(url: "https://github.com/thoughtbot/Curry.git", from: "4.0.2"),
     ],
     targets: [
+        .target(
+            name: "Benchmark",
+            dependencies: ["TypeCheckedAST"]),
         .target(
             name: "SwiftTypeInjector",
             dependencies: ["SwiftSyntax", "SourceKittenFramework"]),

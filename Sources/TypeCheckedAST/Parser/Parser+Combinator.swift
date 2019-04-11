@@ -9,12 +9,6 @@
 enum ChoiceError: Error { case noMatch }
 
 func choice<T>(_ ps: [Parser<T>]) -> Parser<T> {
-//    if ps.isEmpty {
-//        return Parser.fail(ChoiceError.noMatch)
-//    }
-//    var ps = ps
-//    let p = ps.removeFirst()
-//    return p <|> choice(ps)
     return Parser { content in
         for p in ps {
             guard let r = try? p.parse(content) else { continue }
@@ -49,15 +43,16 @@ enum SatisfyError: Error {
 
 func satisfy(predicate: @escaping (Unicode.Scalar) -> Bool) -> Parser<Unicode.Scalar> {
     return Parser { input in
-        guard !input.isEmpty else {
+        guard let head = input.first else {
             throw SatisfyError.empty
         }
-        var input = input
-        let head = input.removeFirst()
+
+        let index1 = input.index(after: input.startIndex)
+        let newInput = input[index1..<input.endIndex]
         guard predicate(head) else {
             throw SatisfyError.invalid(head: head, input: input)
         }
-        return (head, input)
+        return (head, String(newInput).unicodeScalars)
     }
 }
 
@@ -78,5 +73,20 @@ func debugPrintIfThrow<T>(_ id: String = " ", _ p: Parser<T>) -> Parser<T> {
             print("- [\(id)]: \(error)")
             throw error
         }
+    }
+}
+
+public func benchmark(text: String) {
+    func m(_ p: Parser<RawNode>) -> Parser<[RawNode]> {
+        return cons <^> p <*> m(p)
+    }
+    do {
+        let (nodeList, tail) = try m(skipSpaces() *> parseNode() <* skipSpaces())
+            .parse(text)
+        assert(nodeList.count == 0)
+        assert(tail.count == 0)
+    } catch {
+        print(_debugPrintStack.last?.prefix(5000))
+        print(String(describing: error).prefix(5000))
     }
 }

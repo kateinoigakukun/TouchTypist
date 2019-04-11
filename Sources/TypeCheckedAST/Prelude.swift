@@ -17,7 +17,7 @@ func const<A, B>(_ a: A) -> (B) -> A {
 func void<A>(_: A) -> Void {}
 
 @inline(__always)
-func cons<C: RangeReplaceableCollection>(x: C.Element) -> (C) -> C {
+func cons<E>(x: E) -> ([E]) -> [E] {
     return { xs in
         var xs = xs
         xs.insert(x, at: xs.startIndex)
