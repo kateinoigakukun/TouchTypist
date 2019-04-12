@@ -61,8 +61,7 @@ var _debugPrintStack: [String] = []
 
 func debugPrint(_ id: String = #function) -> Parser<Void> {
     return Parser {
-        print(id)
-//        print("- [\(id)]: \($0.current)")
+        print("- [\(id)]: \($0.current)")
         return ((), $0)
     }
 }
