@@ -19,22 +19,22 @@ func choice<T>(_ ps: [Parser<T>]) -> Parser<T> {
 }
 
 func many<T>(_ p: Parser<T>, function: StaticString = #function) -> Parser<[T]> {
-    return many1(p) <|> Parser.pure([])
+    return many1(p, function: function) <|> Parser.pure([])
 }
 
-func many1<T>(_ p: Parser<T>) -> Parser<[T]> {
+func many1<T>(_ p: Parser<T>, function: StaticString = #function) -> Parser<[T]> {
     //    Notes: Beautiful impl but slow
-    //    return cons <^> p <*> many(p)
-    return Parser<[T]> { content in
-        let r_1 = try p.parse(content)
-        var list: [T] = [r_1.0]
-        var tail = r_1.1
-        while let r_n = try? p.parse(tail) {
-            tail = r_n.1
-            list.append(r_n.0)
-        }
-        return (list, tail)
-    }
+        return cons <^> p <*> many(p, function: function)
+//    return Parser<[T]> { content in
+//        let r_1 = try p.parse(content)
+//        var list: [T] = [r_1.0]
+//        var tail = r_1.1
+//        while let r_n = try? p.parse(tail) {
+//            tail = r_n.1
+//            list.append(r_n.0)
+//        }
+//        return (list, tail)
+//    }
 }
 
 enum SatisfyError: Error {
@@ -61,7 +61,8 @@ var _debugPrintStack: [String] = []
 
 func debugPrint(_ id: String = #function) -> Parser<Void> {
     return Parser {
-        _debugPrintStack.append("- [\(id)]: \($0.current)")
+        print(id)
+//        print("- [\(id)]: \($0.current)")
         return ((), $0)
     }
 }

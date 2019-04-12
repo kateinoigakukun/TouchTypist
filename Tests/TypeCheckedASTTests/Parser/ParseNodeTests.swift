@@ -25,6 +25,16 @@ class ParseNodeTests: XCTestCase {
         }
     }
 
+    func testExample12() throws {
+        let content = """
+        (substitution_map generic_signature=<Element where Element == StubProvider>
+            (substitution Element -> <<unresolved concrete type>>))
+        """
+
+        let (a, b) = try parseNode().parse(content)
+        XCTAssertEqual(b.count, 0)
+    }
+
     func testExample11() throws {
         let content = "(pattern_enum_element implicit type='EnumStubProvider.EnumKind' EnumStubProvider.EnumKind._)"
         let (a, b) = try! parseNode().parse(content)
@@ -98,8 +108,8 @@ class ParseNodeTests: XCTestCase {
         XCTAssertNotEqual(nodeList.count, 0)
         XCTAssertEqual(tail.count, 0)
         } catch {
-            print(_debugPrintStack.last?.prefix(5000))
-            print(String(describing: error).prefix(5000))
+            print(latestDebugMessage?.prefix(5000))
+//            print(String(describing: error).prefix(5000))
             XCTFail()
         }
     }
@@ -121,9 +131,9 @@ class ParseNodeTests: XCTestCase {
 
     func testExample1() {
         let content = "(declref_expr function_ref=single)"
-        let (node, tail1) = try! parseNode().parse(content)
-        XCTAssertEqual(node.attributes[node.attributes.count-1], .__unknown(UnknownAttribute(key: "function_ref", value: "single")))
-        XCTAssertEqual(tail1.count, 0)
+//        let (node, tail1) = try! parseNode().parse(content)
+//        XCTAssertEqual(node.attributes[node.attributes.count-1], .__unknown(UnknownAttribute(key: "function_ref", value: "single")))
+//        XCTAssertEqual(tail1.count, 0)
         let (unknown, tail2) = try! parseUnknown().parse("function_ref=single")
         XCTAssertEqual(unknown.key, "function_ref")
         XCTAssertEqual(unknown.value, "single")

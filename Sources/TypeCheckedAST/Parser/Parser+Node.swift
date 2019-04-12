@@ -28,7 +28,7 @@ func parseAttributeOrNodeOrValue() -> Parser<AttributeOrNodeOrValue> {
 }
 
 func parseAttribute() -> Parser<Attribute> {
-    return choice(
+    return debugPrint() *> choice(
         [
             Attribute.range <^> token("range=") *> parseRange(),
             Attribute.type <^> token("type=") *> parseTypeName(),
@@ -36,52 +36,108 @@ func parseAttribute() -> Parser<Attribute> {
             const(Attribute.nothrow) <^> token("nothrow"),
             curry(Attribute.decl) <^> token("decl=") *> parseDecl(),
             Attribute.__unknown <^> parseUnknown(),
+            Attribute.__unknownMark <^> (satisfyString(predicate: {
+                $0 != "(" && $0 != ")"
+            }) >>- notEmpty)
         ]
     )
 }
 
+struct Box {
+    let left: Character
+    let contents: [Content]
+    let right: Character
+
+    enum Content {
+        case text(String)
+        case child(Box)
+    }
+}
+
 func unknownValue() -> Parser<String> {
-    // FIXME
+    return { "\($0.0)\($0.1)\($0.2)" } <^> _unknownValue()
+}
+
+func _unknownValue() -> Parser<(String, Box, String)> {
+
     func shouldBeParenContent(c: Character) -> Bool {
         return c != "(" && c != ")"
             && c != "[" && c != "]"
             && c != "<" && c != ">"
             && c != " " && c != "\n"
     }
-    let parenContent: Parser<String> = satisfyString(predicate: {
-        return shouldBeParenContent(c: $0)
-    })
-    let bracketBox = curry(join4)
-        <^> parenContent
-        <*> token("[")
-        <*> parenContent
-        <*> (curry(join3) <^> (unknownValue() <|> .pure(.init())) <*> parenContent <*> token("]"))
-    let thanBox = curry(join4)
-        <^> parenContent
-        <*> token("<")
-        <*> parenContent
-        <*> (curry(join3) <^> (unknownValue() <|> .pure(.init())) <*> parenContent <*> token(">"))
-    // FIXME
-    let parenBox = curry(join4)
-        <^> parenContent
-        <*> token("(")
-        <*> parenContent
-        <*> (curry(join3) <^> (unknownValue() <|> .pure(.init())) <*> parenContent <*> token(")"))
-    return ({ $0.joined() } <^> many1(
-        (parenBox <|> bracketBox <|> thanBox)
-        )) <|> satisfyString(predicate: {
-            return $0 != " " && $0 != "(" && $0 != ")" && $0 != "\n"
+
+    func parseBox(left: Character, right: Character) -> Parser<Box> {
+        let contentText = Box.Content.text <^> satisfyString(predicate: {
+            return [left, right].contains($0) && shouldBeParenContent(c: $0)
         })
+        let contentChild = Box.Content.child <^> parseBox(left: left, right: right)
+        let content = contentChild <|> contentText
+        return curry(Box.init)
+            <^> char(left)
+            <*> many(content)
+            <*> char(right)
+    }
+
+    func parseBox() -> Parser<(String, Box, String)> {
+        let boxParen: [(Character, Character)] = [
+            ("(", ")"), ("[", "]"), ("<", ">")
+        ]
+        let text = satisfyString(predicate: { c in
+            boxParen.contains { $0.0 != c && $0.1 != c }
+        })
+        return curry({ ($0, $1, $2) })
+            <^> text
+            <*> choice(
+                boxParen.map { parseBox(left: $0.0, right: $0.1) }
+            )
+            <*> text
+    }
+    return parseBox()
+//    // FIXME
+//    func shouldBeParenContent(c: Character) -> Bool {
+//        return c != "(" && c != ")"
+//            && c != "[" && c != "]"
+//            && c != "<" && c != ">"
+//            && c != " " && c != "\n"
+//    }
+//    let parenContent: Parser<String> = satisfyString(predicate: {
+//        return shouldBeParenContent(c: $0)
+//    })
+//    let bracketBox = curry(join4)
+//        <^> parenContent
+//        <*> token("[")
+//        <*> parenContent
+//        <*> (curry(join3) <^> (unknownValue() <|> .pure(.init())) <*> parenContent <*> token("]"))
+//    let thanBox = curry(join4)
+//        <^> parenContent
+//        <*> token("<")
+//        <*> parenContent
+//        <*> (curry(join3) <^> (unknownValue() <|> .pure(.init())) <*> parenContent <*> token(">"))
+//    // FIXME
+//    let parenBox = curry(join4)
+//        <^> parenContentUntil("(")
+//        <*> token("(")
+//        <*> parenContentUntil(")")
+//        <*> (curry(join3) <^> (unknownValue() <|> .pure(.init())) <*> parenContentUntil(")") <*> token(")"))
+//    return ({ $0.joined() } <^> many1(
+//        (parenBox <|> bracketBox <|> thanBox)
+//        )) <|> satisfyString(predicate: {
+//            return $0 != " " && $0 != "(" && $0 != ")" && $0 != "\n"
+//        })
 }
 
 func parseUnknown() -> Parser<UnknownAttribute> {
     let value = (String.init(describing:) <^> parseRange())
-        <|> (String.init(describing:) <^> parseTypeName())
-        <|> (String.init(describing:) <^> parsePoint())
-        <|> (String.init(describing:) <^> parseElements())
-        <|> (String.init(describing:) <^> parseDecl())
-        <|> String.init <^> stringLiteral()
-        <|> String.init <^> unknownValue()
+        <|> debugPrint("1") *> (String.init(describing:) <^> parseTypeName())
+        <|> debugPrint("2") *> (String.init(describing:) <^> parsePoint())
+        <|> debugPrint("3") *> (String.init(describing:) <^> parseElements())
+        <|> debugPrint("4") *> (String.init(describing:) <^> parseDecl())
+        <|> debugPrint("5") *> (String.init <^> stringLiteral())
+        <|> debugPrint("6") *> (String.init <^> unknownValue())
+        <|> (
+            satisfyString(predicate: { $0 != "(" && $0 != ")" && $0 != "\n" }) >>- notEmpty
+    )
     return curry(UnknownAttribute.init)
         <^> (String.init <^> (satisfyString(predicate: {
             !["(", ")", "=", "[", "]", " ", "\n"].contains($0)

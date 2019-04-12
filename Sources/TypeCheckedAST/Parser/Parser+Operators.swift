@@ -60,8 +60,11 @@ func <*> <A, B>(a: Parser<(A) -> B>, b: @autoclosure @escaping () -> Parser<A>) 
 }
 
 @inline(__always)
-func <^> <A, B>(f: @escaping (A) -> B, p: Parser<A>) -> Parser<B> {
-    return p.map(f)
+func <^> <A, B>(f: @escaping (A) -> B, p: @autoclosure @escaping () -> Parser<A>) -> Parser<B> {
+    return Parser { content in
+        let (a, tailA) = try p().parse(content)
+        return (f(a), tailA)
+    }
 }
 
 @inline(__always)
