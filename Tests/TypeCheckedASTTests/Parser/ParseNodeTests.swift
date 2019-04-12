@@ -219,7 +219,7 @@ class ParseNodeTests: XCTestCase {
             let (node, _) = try parseNode().parse(content)
             XCTAssertEqual(node.attributes.first, .type("[String]"))
         } catch {
-            dump(_debugPrintStack)
+            dump(latestDebugMessage)
             XCTFail(String(describing: error))
         }
     }

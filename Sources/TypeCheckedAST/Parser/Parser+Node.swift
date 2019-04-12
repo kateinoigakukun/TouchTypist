@@ -14,21 +14,21 @@ func parseNode() -> Parser<RawNode> {
             skipSpaces() *> parseAttributeOrNodeOrValue() <* skipSpaces()
         )
     )
-    return debugPrint(#function) *> token("(") *> node <* skipSpaces() <* token(")")
+    return trackLatestDebugMessage() *> token("(") *> node <* skipSpaces() <* token(")")
 }
 
 func parseNodeValue() -> Parser<String> {
-    return debugPrint() *> (String.init <^> stringLiteral())
+    return (String.init <^> stringLiteral())
 }
 
 func parseAttributeOrNodeOrValue() -> Parser<AttributeOrNodeOrValue> {
-    return debugPrint() *> (AttributeOrNodeOrValue.value <^> parseNodeValue())
+    return (AttributeOrNodeOrValue.value <^> parseNodeValue())
         <|> (AttributeOrNodeOrValue.attribute <^> parseAttribute())
         <|> (AttributeOrNodeOrValue.node <^> parseNode())
 }
 
 func parseAttribute() -> Parser<Attribute> {
-    return debugPrint() *> choice(
+    return choice(
         [
             Attribute.range <^> token("range=") *> parseRange(),
             Attribute.type <^> token("type=") *> parseTypeName(),
@@ -67,7 +67,7 @@ func unknownValue() -> Parser<String> {
         <*> token("(")
         <*> parenContent
         <*> (curry(join3) <^> (unknownValue() <|> .pure(.init())) <*> parenContent <*> token(")"))
-    return ({ String($0.flatMap { $0 }) } <^> many1(
+    return ({ $0.joined() } <^> many1(
         (parenBox <|> bracketBox <|> thanBox)
         )) <|> satisfyString(predicate: {
             return $0 != " " && $0 != "(" && $0 != ")" && $0 != "\n"
@@ -143,7 +143,7 @@ func parenRec() -> Parser<String> {
         <*> token("(")
         <*> parenContent
         <*> (curry(join3) <^> (parenRec() <|> .pure("")) <*> parenContent <*> token(")"))
-    return { String($0.joined()) } <^> many(
+    return { $0.joined() } <^> many(
         skipSpaces() *> (parenBox <|> bracketBox) <* skipSpaces()
     )
 }
@@ -183,6 +183,6 @@ func parseTypeName() -> Parser<String> {
 
 func parseElements() -> Parser<[String]> {
     return char("[") *>
-        ({ [String($0)] } <^> satisfyString(predicate: { $0 != "]" }))
+        ({ [$0] } <^> satisfyString(predicate: { $0 != "]" }))
         <* char("]")
 }

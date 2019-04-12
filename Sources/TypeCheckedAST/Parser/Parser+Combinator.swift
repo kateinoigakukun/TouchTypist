@@ -19,7 +19,7 @@ func choice<T>(_ ps: [Parser<T>]) -> Parser<T> {
 }
 
 func many<T>(_ p: Parser<T>, function: StaticString = #function) -> Parser<[T]> {
-    return debugPrint("many in \(function)") *> many1(p) <|> Parser.pure([])
+    return many1(p) <|> Parser.pure([])
 }
 
 func many1<T>(_ p: Parser<T>) -> Parser<[T]> {
@@ -62,6 +62,14 @@ var _debugPrintStack: [String] = []
 func debugPrint(_ id: String = #function) -> Parser<Void> {
     return Parser {
         _debugPrintStack.append("- [\(id)]: \($0.current)")
+        return ((), $0)
+    }
+}
+
+var latestDebugMessage: String?
+func trackLatestDebugMessage(_ id: String = #function) -> Parser<Void> {
+    return Parser {
+        latestDebugMessage = "- [\(id)]: \($0.current)"
         return ((), $0)
     }
 }

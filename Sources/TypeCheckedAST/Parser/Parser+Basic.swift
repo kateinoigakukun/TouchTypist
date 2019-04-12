@@ -31,7 +31,7 @@ func token(_ string: String, file: StaticString = #file, function: StaticString 
         case not(
             String,
             input: ParserInput,
-            text: String,
+            text: String.SubSequence,
             file: StaticString, function: StaticString, line: Int
         ),
         outOfBounds
@@ -44,7 +44,7 @@ func token(_ string: String, file: StaticString = #file, function: StaticString 
         guard prefix == string else {
             throw TokenError.not(
                 string, input: input1,
-                text: String(input1.text[input1.startIndex...]),
+                text: input1.text[input1.startIndex...],
                 file: file, function: function, line: line
             )
         }

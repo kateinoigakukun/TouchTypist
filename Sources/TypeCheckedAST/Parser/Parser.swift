@@ -5,13 +5,6 @@
 //  Created by Yuta Saito on 2019/04/05.
 //
 
-class ParsingString {
-    let value: String
-    init(_ value: String) {
-        self.value = value
-    }
-    
-}
 
 struct ParserInput {
     let text: String

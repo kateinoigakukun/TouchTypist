@@ -6,11 +6,11 @@ public func benchmark(text: String) {
     }
     do {
         let (nodeList, tail) = try m(skipSpaces() *> parseNode() <* skipSpaces())
-            .parse(ParsingString.init(text))
-        assert(nodeList.count == 0)
-        assert(tail.startIndex == tail.text.value.endIndex)
+            .parse(ParserInput(text: text, startIndex: text.startIndex))
+        assert(nodeList.count != 0)
+        assert(tail.current.isEmpty)
     } catch {
-        print(_debugPrintStack.last?.prefix(5000))
+        print(latestDebugMessage?.prefix(5000))
         print(String(describing: error).prefix(5000))
     }
 }
