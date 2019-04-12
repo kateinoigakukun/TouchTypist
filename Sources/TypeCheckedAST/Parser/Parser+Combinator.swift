@@ -24,17 +24,16 @@ func many<T>(_ p: Parser<T>, function: StaticString = #function) -> Parser<[T]> 
 
 func many1<T>(_ p: Parser<T>, function: StaticString = #function) -> Parser<[T]> {
     //    Notes: Beautiful impl but slow
-        return cons <^> p <*> many(p, function: function)
-//    return Parser<[T]> { content in
-//        let r_1 = try p.parse(content)
-//        var list: [T] = [r_1.0]
-//        var tail = r_1.1
-//        while let r_n = try? p.parse(tail) {
-//            tail = r_n.1
-//            list.append(r_n.0)
-//        }
-//        return (list, tail)
-//    }
+    return Parser<[T]> { content in
+        let r_1 = try p.parse(content)
+        var list: [T] = [r_1.0]
+        var tail = r_1.1
+        while let r_n = try? p.parse(tail) {
+            tail = r_n.1
+            list.append(r_n.0)
+        }
+        return (list, tail)
+    }
 }
 
 enum SatisfyError: Error {
@@ -55,6 +54,10 @@ func satisfy(predicate: @escaping (Character) -> Bool) -> Parser<Character> {
         }
         return (head, newInput)
     }
+}
+
+func orNil<T>(_ p: Parser<T>) -> Parser<T?> {
+    return (Optional.some <^> p) <|> .pure(nil)
 }
 
 var _debugPrintStack: [String] = []

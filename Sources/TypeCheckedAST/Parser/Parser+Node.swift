@@ -41,76 +41,31 @@ func parseAttribute() -> Parser<Attribute> {
     )
 }
 
-struct Box {
-    let left: Character
-    let contents: [Content]
-    let right: Character
-
-    enum Content {
-        case text(String)
-        case child(Box)
-    }
-}
-
 func unknownMark() -> Parser<String> {
     return satisfyString(predicate: { $0 != "(" && $0 != ")" }) >>- notEmpty
 }
 
-func unknownValue() -> Parser<String> {
-    return {
-        guard let box = $0.1 else {
-            return "\($0.0)\($0.2)"
-        }
-        return "\($0.0)\(box)\($0.2)"
-        } <^> _unknownValue()
-}
-
-enum BoxParsingError: Error {
-    case breakParsingContent
-}
-
-func parseBox(left: Character, right: Character) -> Parser<Box> {
-    let contentText = Box.Content.text <^> satisfyString(predicate: {
+func parseBox(left: Character, right: Character) -> Parser<String> {
+    let contentText = satisfyString(predicate: {
         return ![left, right].contains($0) && $0 != "\n"
     })
-    let contentChild = Box.Content.child <^> parseBox(left: left, right: right)
     let notEmpty = Parser<Void> { _ in
+        enum BoxParsingError: Error { case breakParsingContent }
         throw BoxParsingError.breakParsingContent
     }
-    let content = contentChild <|> contentText
-    return debugPrint() *> (curry(Box.init)
-        <^> char(left)
-        <*> many(notEmpty *> content)
-        <*> char(right))
+    let content = { $0.joined() } <^> many(notEmpty *> (parseBox(left: left, right: right) <|> contentText))
+    return curry({ String($0) + $1 + String($2) }) <^> char(left) <*> content <*> char(right)
 }
 
-func parseBox() -> Parser<(String, Box?, String)> {
+func unknownValue() -> Parser<String> {
     let boxParen: [(Character, Character)] = [
         ("(", ")"), ("[", "]"), ("<", ">")
     ]
-    let text = satisfyString(predicate: { c in
-        !boxParen.contains { c == $0.0 || c == $0.1 } && c != "\n"
-    })
-    return curry({ ($0, $1, $2) })
-        <^> text
-        <*> (
-            Optional.some <^> (choice(
-                boxParen.map { parseBox(left: $0.0, right: $0.1) }
-            ))
-                <|> .pure(nil)
-        )
-        <*> text
-}
-
-func _unknownValue() -> Parser<(String, Box?, String)> {
-
-    func shouldBeParenContent(c: Character) -> Bool {
-        return c != "(" && c != ")"
-            && c != "[" && c != "]"
-            && c != "<" && c != ">"
-            && c != " " && c != "\n"
-    }
-    return parseBox()
+    let chars = boxParen.flatMap { [$0.0, $0.1] } + [Character("\n")]
+    let text = satisfyString(predicate: { !chars.contains($0) })
+    let box = choice(boxParen.map { parseBox(left: $0.0, right: $0.1) })
+    return curry({ $0 + ($1 ?? "") + $2 })
+        <^> text <*> orNil(box) <*> text
 }
 
 func parseUnknown() -> Parser<UnknownAttribute> {
