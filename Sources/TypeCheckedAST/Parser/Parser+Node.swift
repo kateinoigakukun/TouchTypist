@@ -9,26 +9,26 @@ import Curry
 
 func parseNode() -> Parser<RawNode> {
     let node = (curry(RawNode.init)
-        <^> debugPrint() *> (String.init <^> keyword())
+        <^> (String.init <^> keyword())
         <*> many(
             skipSpaces() *> parseAttributeOrNodeOrValue() <* skipSpaces()
         )
     )
-    return token("(") *> node <* skipSpaces() <* token(")")
+    return debugPrint(#function) *> token("(") *> node <* skipSpaces() <* token(")")
 }
 
 func parseNodeValue() -> Parser<String> {
-    return String.init <^> stringLiteral()
+    return debugPrint() *> (String.init <^> stringLiteral())
 }
 
 func parseAttributeOrNodeOrValue() -> Parser<AttributeOrNodeOrValue> {
-    return (AttributeOrNodeOrValue.value <^> parseNodeValue())
+    return debugPrint() *> (AttributeOrNodeOrValue.value <^> parseNodeValue())
         <|> (AttributeOrNodeOrValue.attribute <^> parseAttribute())
         <|> (AttributeOrNodeOrValue.node <^> parseNode())
 }
 
 func parseAttribute() -> Parser<Attribute> {
-    return choice(
+    return debugPrint() *> choice(
         [
             Attribute.range <^> token("range=") *> parseRange(),
             Attribute.type <^> token("type=") *> parseTypeName(),
@@ -40,15 +40,15 @@ func parseAttribute() -> Parser<Attribute> {
     )
 }
 
-func unknownValue() -> Parser<String.UnicodeScalarView> {
+func unknownValue() -> Parser<String> {
     // FIXME
-    func shouldBeParenContent(c: Unicode.Scalar) -> Bool {
+    func shouldBeParenContent(c: Character) -> Bool {
         return c != "(" && c != ")"
             && c != "[" && c != "]"
             && c != "<" && c != ">"
             && c != " " && c != "\n"
     }
-    let parenContent: Parser<String.UnicodeScalarView> = satisfyString(predicate: {
+    let parenContent: Parser<String> = satisfyString(predicate: {
         return shouldBeParenContent(c: $0)
     })
     let bracketBox = curry(join4)
@@ -67,7 +67,7 @@ func unknownValue() -> Parser<String.UnicodeScalarView> {
         <*> token("(")
         <*> parenContent
         <*> (curry(join3) <^> (unknownValue() <|> .pure(.init())) <*> parenContent <*> token(")"))
-    return ({ String.UnicodeScalarView($0.flatMap { $0 }) } <^> many1(
+    return ({ String($0.flatMap { $0 }) } <^> many1(
         (parenBox <|> bracketBox <|> thanBox)
         )) <|> satisfyString(predicate: {
             return $0 != " " && $0 != "(" && $0 != ")" && $0 != "\n"
@@ -89,11 +89,11 @@ func parseUnknown() -> Parser<UnknownAttribute> {
         <*> (Optional.some <^> (token("=") *> value) <|> .pure(nil))
 }
 
-let join4: (String.UnicodeScalarView, String.UnicodeScalarView, String.UnicodeScalarView, String.UnicodeScalarView) -> String.UnicodeScalarView = { $0 + $1 + $2 + $3 }
-let join3: (String.UnicodeScalarView, String.UnicodeScalarView, String.UnicodeScalarView) -> String.UnicodeScalarView = { $0 + $1 + $2 }
-let join2: (String.UnicodeScalarView, String.UnicodeScalarView) -> String.UnicodeScalarView = { $0 + $1 }
+let join4: (String, String, String, String) -> String = { $0 + $1 + $2 + $3 }
+let join3: (String, String, String) -> String = { $0 + $1 + $2 }
+let join2: (String, String) -> String = { $0 + $1 }
 
-func declSignature() -> Parser<String.UnicodeScalarView> {
+func declSignature() -> Parser<String> {
     // foo(arg:)
     let funcSig = curry(join4) <^> keyword()
         <*> token("(")
@@ -106,16 +106,16 @@ func declSignature() -> Parser<String.UnicodeScalarView> {
         <|> (satisfyString(predicate: {
             !["(", ")", "[", "]", ".", " ", "\n"].contains($0)
         }))
-    func rec() -> Parser<[String.UnicodeScalarView]> {
+    func rec() -> Parser<[String]> {
         return cons
             <^> (curry(join2) <^> token(".") <*> sig)
             <*> (rec() <|> Parser.pure([]))
     }
 
     let atSig = curry(join2) <^> token("@")
-        <*> ({ $0.description.unicodeScalars } <^> parsePoint())
+        <*> ({ $0.description } <^> parsePoint())
 
-    return curry({ String.UnicodeScalarView($0.flatMap { $0 }) + $1 })
+    return curry({ String($0.flatMap { $0 }) + $1 })
         <^> (cons <^> keyword() <*> rec())
         <*> (atSig <|> .pure(.init()))
 }
@@ -123,12 +123,12 @@ func declSignature() -> Parser<String.UnicodeScalarView> {
 func parseDecl() -> Parser<Decl> {
     let signatures = many1(skipSpaces() *> declSignature() <* skipSpaces())
     return curry(Decl.init)
-        <^> (curry({ String(String.UnicodeScalarView($0.joined(separator: " ".unicodeScalars))) })
+        <^> (curry({ String(String($0.joined(separator: " "))) })
             <^> signatures) <* skipSpaces()
         <*> (Optional.some <^> parseDeclSubstitution() <|> Parser.pure(nil))
 }
 
-func parenRec() -> Parser<String.UnicodeScalarView> {
+func parenRec() -> Parser<String> {
     let parenContent = satisfyString(predicate: {
         $0 != "(" && $0 != ")" && $0 != "[" && $0 != "]"
     })
@@ -139,11 +139,11 @@ func parenRec() -> Parser<String.UnicodeScalarView> {
 
     // FIXME
     let parenBox = curry(join4)
-        <^> Parser.pure(" ".unicodeScalars)
+        <^> Parser.pure(" ")
         <*> token("(")
         <*> parenContent
-        <*> (curry(join3) <^> (parenRec() <|> .pure("".unicodeScalars)) <*> parenContent <*> token(")"))
-    return { String.UnicodeScalarView($0.joined()) } <^> many(
+        <*> (curry(join3) <^> (parenRec() <|> .pure("")) <*> parenContent <*> token(")"))
+    return { String($0.joined()) } <^> many(
         skipSpaces() *> (parenBox <|> bracketBox) <* skipSpaces()
     )
 }
@@ -177,7 +177,7 @@ func parsePoint() -> Parser<Range.Point> {
 
 
 func parseTypeName() -> Parser<String> {
-    let validString = String.init <^> satisfyString(predicate: { $0 != "'" })
+    let validString = satisfyString(predicate: { $0 != "'" })
     return char("\'") *> validString <* char("\'")
 }
 

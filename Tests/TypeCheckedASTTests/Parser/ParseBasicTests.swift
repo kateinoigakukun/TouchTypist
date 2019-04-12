@@ -32,3 +32,10 @@ class ParseBasicTests: XCTestCase {
     }
 
 }
+
+extension Parser {
+    func parse(_ text: String) throws -> (T, String) {
+        let (result, tail) = try parse(ParsingString(text))
+        return (result, String(tail.text.value[tail.startIndex...]))
+    }
+}

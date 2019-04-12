@@ -5,12 +5,12 @@
 //  Created by Yuta Saito on 2019/04/05.
 //
 
-func satisfyString(predicate: @escaping (Unicode.Scalar) -> Bool) -> Parser<String.UnicodeScalarView> {
+func satisfyString(predicate: @escaping (Character) -> Bool) -> Parser<String> {
     return many(satisfy(predicate: { predicate($0) }))
-        .map { String.UnicodeScalarView($0) }
+        .map { String($0) }
 }
 
-func char(_ c: Unicode.Scalar) -> Parser<Unicode.Scalar> {
+func char(_ c: Character) -> Parser<Character> {
     return satisfy(predicate: { $0 == c })
 }
 
@@ -18,39 +18,50 @@ func skipSpaces() -> Parser<Void> {
     return void <^> many(char(" ") <|> char("\n"))
 }
 
-func digit() -> Parser<Unicode.Scalar> {
+func digit() -> Parser<Character> {
     return satisfy { "0"..."9" ~= $0 }
 }
 
 func number() -> Parser<Int> {
-    return many1(digit()).map { Int(String(String.UnicodeScalarView($0)))! }
+    return many1(digit()).map { Int(String($0))! }
 }
 
-func token(_ string: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) -> Parser<String.UnicodeScalarView> {
+func token(_ string: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) -> Parser<String> {
     enum TokenError: Error {
         case not(
             String,
-            input: String.UnicodeScalarView,
+            input: ParserInput,
+            text: String,
             file: StaticString, function: StaticString, line: Int
-        )
+        ),
+        outOfBounds
     }
     return Parser { input1 in
-        let prefix = input1.prefix(string.count)
-        guard prefix.elementsEqual(string.unicodeScalars) else {
-            throw TokenError.not(string, input: input1, file: file, function: function, line: line)
+        guard let endIndex = input1.text.value.index(input1.startIndex, offsetBy: string.count, limitedBy: input1.text.value.endIndex) else {
+            throw TokenError.outOfBounds
         }
-        let input2 = input1.suffix(
-            from: input1.index(input1.startIndex, offsetBy: string.count)
+        let prefix = input1.text.value[input1.startIndex..<endIndex]
+        guard prefix == string else {
+            throw TokenError.not(
+                string, input: input1,
+                text: String(input1.text.value[input1.startIndex...]),
+                file: file, function: function, line: line
+            )
+        }
+        let newStartIndex = input1.text.value.index(input1.startIndex, offsetBy: string.count)
+        let input2 = ParserInput(
+            text: input1.text,
+            startIndex: newStartIndex
         )
-        return (String.UnicodeScalarView(prefix), String.UnicodeScalarView(input2))
+        return (String(prefix), input2)
     }
 }
 
-func registeredSymbol() -> [Unicode.Scalar] {
+func registeredSymbol() -> [Character] {
     return ["(", ")", "=", "[", "]", "."]
 }
 
-func notEmpty(_ s: String.UnicodeScalarView) -> Parser<String.UnicodeScalarView> {
+func notEmpty(_ s: String) -> Parser<String> {
     guard !s.isEmpty else {
         return .fail(KeywordError.empty)
     }
@@ -58,14 +69,14 @@ func notEmpty(_ s: String.UnicodeScalarView) -> Parser<String.UnicodeScalarView>
 }
 
 enum KeywordError: Error { case empty }
-func keyword() -> Parser<String.UnicodeScalarView> {
+func keyword() -> Parser<String> {
 
-    return satisfyString(predicate: {
-        !(registeredSymbol() + [" ", "\n"]).contains($0)
+    return satisfyString(predicate: { k in
+        !(registeredSymbol() + [" ", "\n"]).contains(k)
     }) >>- notEmpty
 }
 
-func stringLiteral() -> Parser<String.UnicodeScalarView> {
+func stringLiteral() -> Parser<String> {
     let validString = satisfyString(predicate: { $0 != "\"" })
     return char("\"") *> validString <* char("\"")
 }

@@ -214,8 +214,14 @@ class ParseNodeTests: XCTestCase {
 
     func testParseType() throws {
         let content = "(call_expr type='[String]')"
-        let (node, _) = try parseNode().parse(content)
-        XCTAssertEqual(node.attributes.first, .type("[String]"))
+        let (result, t) = try! (skipSpaces() *> parseAttribute()).parse(" type='[String]'")
+        do {
+            let (node, _) = try parseNode().parse(content)
+            XCTAssertEqual(node.attributes.first, .type("[String]"))
+        } catch {
+            dump(_debugPrintStack)
+            XCTFail(String(describing: error))
+        }
     }
 
     func testParseMultipleAttributes() throws {

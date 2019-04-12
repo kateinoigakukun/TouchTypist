@@ -21,21 +21,21 @@ class ParserTests: XCTestCase {
     }
 
 
-    func testRemoveFirst1() {
-        var testList = LinkedList.element(1, .tail)
-        measure {
-            for _ in 1...1000000 {
-                testList.removeFirst1()
-            }
-        }
-    }
-
-    func testRemoveFirst2() {
-        var testList = LinkedList.element(1, .tail)
-        measure {
-            for _ in 1...1000000 {
-                testList.removeFirst2()
-            }
-        }
-    }
+//    func testRemoveFirst1() {
+//        var testList = LinkedList.element(1, .tail)
+//        measure {
+//            for _ in 1...1000000 {
+//                testList.removeFirst1()
+//            }
+//        }
+//    }
+//
+//    func testRemoveFirst2() {
+//        var testList = LinkedList.element(1, .tail)
+//        measure {
+//            for _ in 1...1000000 {
+//                testList.removeFirst2()
+//            }
+//        }
+//    }
 }

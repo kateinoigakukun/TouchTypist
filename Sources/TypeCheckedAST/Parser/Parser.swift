@@ -5,13 +5,34 @@
 //  Created by Yuta Saito on 2019/04/05.
 //
 
+class ParsingString {
+    let value: String
+    init(_ value: String) {
+        self.value = value
+    }
+    
+}
+
+struct ParserInput {
+    let text: ParsingString
+    let startIndex: String.Index
+
+    var current: String {
+        return String(text.value[startIndex...])
+    }
+}
+
 struct Parser<T> {
-    typealias Input = String.UnicodeScalarView
+    typealias Input = ParserInput
     let parse: (Input) throws -> (T, Input)
 
     @inline(__always)
-    func parse(_ string: String) throws -> (T, Input) {
-        return try self.parse(string.unicodeScalars)
+    func parse(_ text: ParsingString) throws -> (T, Input) {
+        let input = Input(
+            text: text,
+            startIndex: text.value.startIndex
+        )
+        return try self.parse(input)
     }
 
     @inline(__always)

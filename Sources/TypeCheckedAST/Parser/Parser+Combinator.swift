@@ -18,8 +18,8 @@ func choice<T>(_ ps: [Parser<T>]) -> Parser<T> {
     }
 }
 
-func many<T>(_ p: Parser<T>) -> Parser<[T]> {
-    return many1(p) <|> Parser.pure([])
+func many<T>(_ p: Parser<T>, function: StaticString = #function) -> Parser<[T]> {
+    return debugPrint("many in \(function)") *> many1(p) <|> Parser.pure([])
 }
 
 func many1<T>(_ p: Parser<T>) -> Parser<[T]> {
@@ -38,29 +38,30 @@ func many1<T>(_ p: Parser<T>) -> Parser<[T]> {
 }
 
 enum SatisfyError: Error {
-    case invalid(head: Unicode.Scalar, input: String.UnicodeScalarView), empty
+    case invalid(head: Character, input: ParserInput), empty
 }
 
-func satisfy(predicate: @escaping (Unicode.Scalar) -> Bool) -> Parser<Unicode.Scalar> {
+func satisfy(predicate: @escaping (Character) -> Bool) -> Parser<Character> {
     return Parser { input in
-        guard let head = input.first else {
+        guard input.startIndex != input.text.value.endIndex  else {
             throw SatisfyError.empty
         }
 
-        let index1 = input.index(after: input.startIndex)
-        let newInput = input[index1..<input.endIndex]
+        let head = input.text.value[input.startIndex]
+        let index1 = input.text.value.index(after: input.startIndex)
+        let newInput = ParserInput(text: input.text, startIndex: index1)
         guard predicate(head) else {
             throw SatisfyError.invalid(head: head, input: input)
         }
-        return (head, String(newInput).unicodeScalars)
+        return (head, newInput)
     }
 }
 
 var _debugPrintStack: [String] = []
 
-func debugPrint(_ id: String = " ") -> Parser<Void> {
+func debugPrint(_ id: String = #function) -> Parser<Void> {
     return Parser {
-        _debugPrintStack.append("- [\(id)]: \($0)")
+        _debugPrintStack.append("- [\(id)]: \($0.current)")
         return ((), $0)
     }
 }
@@ -73,20 +74,5 @@ func debugPrintIfThrow<T>(_ id: String = " ", _ p: Parser<T>) -> Parser<T> {
             print("- [\(id)]: \(error)")
             throw error
         }
-    }
-}
-
-public func benchmark(text: String) {
-    func m(_ p: Parser<RawNode>) -> Parser<[RawNode]> {
-        return cons <^> p <*> m(p)
-    }
-    do {
-        let (nodeList, tail) = try m(skipSpaces() *> parseNode() <* skipSpaces())
-            .parse(text)
-        assert(nodeList.count == 0)
-        assert(tail.count == 0)
-    } catch {
-        print(_debugPrintStack.last?.prefix(5000))
-        print(String(describing: error).prefix(5000))
     }
 }
