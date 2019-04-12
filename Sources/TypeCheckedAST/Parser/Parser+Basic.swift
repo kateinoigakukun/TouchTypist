@@ -37,18 +37,18 @@ func token(_ string: String, file: StaticString = #file, function: StaticString 
         outOfBounds
     }
     return Parser { input1 in
-        guard let endIndex = input1.text.value.index(input1.startIndex, offsetBy: string.count, limitedBy: input1.text.value.endIndex) else {
+        guard let endIndex = input1.text.index(input1.startIndex, offsetBy: string.count, limitedBy: input1.text.endIndex) else {
             throw TokenError.outOfBounds
         }
-        let prefix = input1.text.value[input1.startIndex..<endIndex]
+        let prefix = input1.text[input1.startIndex..<endIndex]
         guard prefix == string else {
             throw TokenError.not(
                 string, input: input1,
-                text: String(input1.text.value[input1.startIndex...]),
+                text: String(input1.text[input1.startIndex...]),
                 file: file, function: function, line: line
             )
         }
-        let newStartIndex = input1.text.value.index(input1.startIndex, offsetBy: string.count)
+        let newStartIndex = input1.text.index(input1.startIndex, offsetBy: string.count)
         let input2 = ParserInput(
             text: input1.text,
             startIndex: newStartIndex

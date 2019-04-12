@@ -35,7 +35,8 @@ class ParseBasicTests: XCTestCase {
 
 extension Parser {
     func parse(_ text: String) throws -> (T, String) {
-        let (result, tail) = try parse(ParsingString(text))
-        return (result, String(tail.text.value[tail.startIndex...]))
+        let input = ParserInput(text: text, startIndex: text.startIndex)
+        let (result, tail): (T, ParserInput) = try parse(input)
+        return (result, String(tail.text[tail.startIndex...]))
     }
 }

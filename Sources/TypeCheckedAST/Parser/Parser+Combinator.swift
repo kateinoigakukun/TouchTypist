@@ -43,12 +43,12 @@ enum SatisfyError: Error {
 
 func satisfy(predicate: @escaping (Character) -> Bool) -> Parser<Character> {
     return Parser { input in
-        guard input.startIndex != input.text.value.endIndex  else {
+        guard input.startIndex != input.text.endIndex  else {
             throw SatisfyError.empty
         }
 
-        let head = input.text.value[input.startIndex]
-        let index1 = input.text.value.index(after: input.startIndex)
+        let head = input.text[input.startIndex]
+        let index1 = input.text.index(after: input.startIndex)
         let newInput = ParserInput(text: input.text, startIndex: index1)
         guard predicate(head) else {
             throw SatisfyError.invalid(head: head, input: input)

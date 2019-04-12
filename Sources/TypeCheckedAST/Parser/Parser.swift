@@ -14,26 +14,17 @@ class ParsingString {
 }
 
 struct ParserInput {
-    let text: ParsingString
+    let text: String
     let startIndex: String.Index
 
     var current: String {
-        return String(text.value[startIndex...])
+        return String(text[startIndex...])
     }
 }
 
 struct Parser<T> {
     typealias Input = ParserInput
     let parse: (Input) throws -> (T, Input)
-
-    @inline(__always)
-    func parse(_ text: ParsingString) throws -> (T, Input) {
-        let input = Input(
-            text: text,
-            startIndex: text.value.startIndex
-        )
-        return try self.parse(input)
-    }
 
     @inline(__always)
     func map<U>(_ transformer: @escaping (T) throws -> U) -> Parser<U> {
