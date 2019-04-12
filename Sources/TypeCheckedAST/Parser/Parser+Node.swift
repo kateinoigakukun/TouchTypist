@@ -36,9 +36,7 @@ func parseAttribute() -> Parser<Attribute> {
             const(Attribute.nothrow) <^> token("nothrow"),
             curry(Attribute.decl) <^> token("decl=") *> parseDecl(),
             Attribute.__unknown <^> parseUnknown(),
-            Attribute.__unknownMark <^> (satisfyString(predicate: {
-                $0 != "(" && $0 != ")"
-            }) >>- notEmpty)
+            Attribute.__unknownMark <^> unknownMark()
         ]
     )
 }
@@ -52,6 +50,10 @@ struct Box {
         case text(String)
         case child(Box)
     }
+}
+
+func unknownMark() -> Parser<String> {
+    return satisfyString(predicate: { $0 != "(" && $0 != ")" }) >>- notEmpty
 }
 
 func unknownValue() -> Parser<String> {
@@ -109,47 +111,16 @@ func _unknownValue() -> Parser<(String, Box?, String)> {
             && c != " " && c != "\n"
     }
     return parseBox()
-//    // FIXME
-//    func shouldBeParenContent(c: Character) -> Bool {
-//        return c != "(" && c != ")"
-//            && c != "[" && c != "]"
-//            && c != "<" && c != ">"
-//            && c != " " && c != "\n"
-//    }
-//    let parenContent: Parser<String> = satisfyString(predicate: {
-//        return shouldBeParenContent(c: $0)
-//    })
-//    let bracketBox = curry(join4)
-//        <^> parenContent
-//        <*> token("[")
-//        <*> parenContent
-//        <*> (curry(join3) <^> (unknownValue() <|> .pure(.init())) <*> parenContent <*> token("]"))
-//    let thanBox = curry(join4)
-//        <^> parenContent
-//        <*> token("<")
-//        <*> parenContent
-//        <*> (curry(join3) <^> (unknownValue() <|> .pure(.init())) <*> parenContent <*> token(">"))
-//    // FIXME
-//    let parenBox = curry(join4)
-//        <^> parenContentUntil("(")
-//        <*> token("(")
-//        <*> parenContentUntil(")")
-//        <*> (curry(join3) <^> (unknownValue() <|> .pure(.init())) <*> parenContentUntil(")") <*> token(")"))
-//    return ({ $0.joined() } <^> many1(
-//        (parenBox <|> bracketBox <|> thanBox)
-//        )) <|> satisfyString(predicate: {
-//            return $0 != " " && $0 != "(" && $0 != ")" && $0 != "\n"
-//        })
 }
 
 func parseUnknown() -> Parser<UnknownAttribute> {
     let value = (String.init(describing:) <^> parseRange())
-        <|> debugPrint("1") *> (String.init(describing:) <^> parseTypeName())
-        <|> debugPrint("2") *> (String.init(describing:) <^> parsePoint())
-        <|> debugPrint("3") *> (String.init(describing:) <^> parseElements())
-        <|> debugPrint("4") *> (String.init(describing:) <^> parseDecl())
-        <|> debugPrint("5") *> (String.init <^> stringLiteral())
-        <|> debugPrint("6") *> (String.init <^> unknownValue())
+        <|> (String.init(describing:) <^> parseTypeName())
+        <|> (String.init(describing:) <^> parsePoint())
+        <|> (String.init(describing:) <^> parseElements())
+        <|> (String.init(describing:) <^> parseDecl())
+        <|> (String.init <^> stringLiteral())
+        <|> (String.init <^> unknownValue())
         <|> (
             satisfyString(predicate: { $0 != "(" && $0 != ")" && $0 != "\n" }) >>- notEmpty
     )
