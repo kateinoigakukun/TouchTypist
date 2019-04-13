@@ -47,19 +47,20 @@ func unknownChar() -> Parser<Character> {
     return satisfy(predicate: { !["(", ")"].contains($0) })
 }
 
+enum BoxParsingError: ParserError {
+    case breakParsingContent(ParserInput)
+    var input: ParserInput {
+        switch self {
+        case .breakParsingContent(let input): return input
+        }
+    }
+}
+
 func parseBox(left: Character, right: Character) -> Parser<String> {
     let contentText = satisfyString(predicate: {
         return ![left, right].contains($0) && $0 != "\n"
     })
     let notEmpty = Parser<Void> { input in
-        enum BoxParsingError: ParserError {
-            case breakParsingContent(ParserInput)
-            var input: ParserInput {
-                switch self {
-                case .breakParsingContent(let input): return input
-                }
-            }
-        }
         return .failure(.init(original: BoxParsingError.breakParsingContent(input)))
     }
     let content = { $0.joined() } <^> many(notEmpty *> (parseBox(left: left, right: right) <|> contentText))

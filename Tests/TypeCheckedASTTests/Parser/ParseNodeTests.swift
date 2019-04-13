@@ -50,14 +50,11 @@ class ParseNodeTests: XCTestCase {
     }
 
     func testParseWholeProjectAST() throws {
-        func m(_ p: Parser<RawNode>) -> Parser<[RawNode]> {
-            return cons <^> p <*> m(p)
-        }
         do {
-        let (nodeList, tail) = try many((skipSpaces() *> parseNode() <* skipSpaces()))
-            .parse(rawASTString)
-        XCTAssertNotEqual(nodeList.count, 0)
-        XCTAssertEqual(tail.count, 0)
+            let (nodeList, tail) = try many((skipSpaces() *> parseNode() <* skipSpaces()))
+                .parse(rawASTString)
+            XCTAssertNotEqual(nodeList.count, 0)
+            XCTAssertEqual(tail.count, 0)
         } catch let error as ParserError {
             if let message = error.input.debugContext?.latestDebugMessage {
                 print(message.prefix(5000))
