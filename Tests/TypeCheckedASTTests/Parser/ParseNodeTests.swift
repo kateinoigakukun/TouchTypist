@@ -49,21 +49,6 @@ class ParseNodeTests: XCTestCase {
         XCTAssertEqual(attribute, .type("(Int) -> ()"))
     }
 
-    func testParseWholeProjectAST() throws {
-        do {
-            let (nodeList, tail) = try many((skipSpaces() *> parseNode() <* skipSpaces()))
-                .parse(rawASTString)
-            XCTAssertNotEqual(nodeList.count, 0)
-            XCTAssertEqual(tail.count, 0)
-        } catch let error as ParserError {
-            if let message = error.input.debugContext?.latestDebugMessage {
-                print(message.prefix(5000))
-            }
-            print(String(describing: error).prefix(5000))
-            XCTFail()
-        }
-    }
-
     func testParseUnknownChars() throws {
         let content = """
         (closure_expr discriminator=0)

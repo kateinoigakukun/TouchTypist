@@ -26,6 +26,25 @@ struct RawNode {
             }
         }.first
     }
+
+    func dump() {
+        print(_dump())
+    }
+
+    private func _dump(depth: Int = 0) -> String {
+        let typeNames = attributes.compactMap { attr -> String? in
+            switch attr {
+            case .type(let type): return type
+            default: return nil
+            }
+        }
+        let indent = Array(repeating: " ", count: depth).joined()
+        return """
+        \(indent)(\(name) \(typeNames.map { "type=\($0)" }.joined(separator: " "))
+        \(children.map { $0._dump(depth: depth + 2) }.joined(separator: "\n"))
+        \(indent))
+        """
+    }
 }
 
 struct Range {
