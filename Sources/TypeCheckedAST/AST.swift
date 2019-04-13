@@ -38,30 +38,25 @@ struct RawNode {
 
     func find(line: Int, column: Int) -> RawNode? {
         func findChildren() -> RawNode? {
-            if !children.isEmpty {
-                let hitNodes = children.compactMap {
-                    $0.find(line: line, column: column)
-                }
-                return hitNodes.first
+            guard !children.isEmpty else { return nil }
+            let hitNodes = children.compactMap {
+                $0.find(line: line, column: column)
             }
-            return nil
+            return hitNodes.first
         }
         guard let location = location else {
             return findChildren()
         }
-        guard line >= location.line else {
+
+        switch (location.line, location.column) {
+        case (line, column):
+            return self
+        case (line, ...column), (...line, _):
+            return findChildren()
+        case (line..., _):
             return nil
+        default: fatalError()
         }
-        if line == location.line {
-            if column >= location.column {
-                if column == location.column {
-                    return self
-                }
-            } else {
-                return nil
-            }
-        }
-        return findChildren()
     }
 
     func dump() {
