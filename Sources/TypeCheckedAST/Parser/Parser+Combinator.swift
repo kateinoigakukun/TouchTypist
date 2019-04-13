@@ -18,6 +18,17 @@ func choice<T>(_ ps: [Parser<T>]) -> Parser<T> {
     }
 }
 
+func debugChoice<T>(_ ps: [Parser<T>], function: StaticString = #function) -> Parser<T> {
+    return Parser { content in
+        for (i, p) in ps.enumerated() {
+            guard let r = try? p.parse(content) else { continue }
+            print("[choice in \(function)] selected \(i)")
+            return r
+        }
+        throw ChoiceError.noMatch
+    }
+}
+
 func many<T>(_ p: Parser<T>, function: StaticString = #function) -> Parser<[T]> {
     return many1(p, function: function) <|> Parser.pure([])
 }

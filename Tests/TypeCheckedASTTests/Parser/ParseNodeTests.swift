@@ -25,6 +25,19 @@ class ParseNodeTests: XCTestCase {
         }
     }
 
+    func testExample13() throws {
+        let content = "(accessor_decl 'anonname=0x7ff65698e370' interface type='<T where T : Decodable> (Stub<T>.Injector) -> () -> [(inout T) throws -> Void]' access=internal get_for=mutations)"
+
+        do {
+            let (a, b) = try! parseAttribute().parse(" 'anonname=0x7ff65698e370' interface type='<T where T : Decodable> (Stub<T>.Injector) -> () -> [(inout T) throws -> Void]' access=internal get_for=mutations)")
+            let (c, d) = try parseNode().parse(content)
+//            XCTAssertEqual(b.count, 0)
+        } catch {
+            print(latestDebugMessage)
+            XCTFail(String(describing: error))
+        }
+    }
+
     func testExample12() throws {
         let content = """
         (substitution_map generic_signature=<Element where Element == StubProvider>
@@ -103,19 +116,19 @@ class ParseNodeTests: XCTestCase {
     }
 
     func testExample3() throws {
-//        func m(_ p: Parser<RawNode>) -> Parser<[RawNode]> {
-//            return cons <^> p <*> m(p)
-//        }
-//        do {
-//        let (nodeList, tail) = try m(skipSpaces() *> parseNode() <* skipSpaces())
-//            .parse(rawASTString)
-//        XCTAssertNotEqual(nodeList.count, 0)
-//        XCTAssertEqual(tail.count, 0)
-//        } catch {
-//            print(latestDebugMessage?.prefix(5000))
-////            print(String(describing: error).prefix(5000))
-//            XCTFail()
-//        }
+        func m(_ p: Parser<RawNode>) -> Parser<[RawNode]> {
+            return cons <^> p <*> m(p)
+        }
+        do {
+        let (nodeList, tail) = try m(skipSpaces() *> parseNode() <* skipSpaces())
+            .parse(rawASTString)
+        XCTAssertNotEqual(nodeList.count, 0)
+        XCTAssertEqual(tail.count, 0)
+        } catch {
+            print(latestDebugMessage?.prefix(5000))
+//            print(String(describing: error).prefix(5000))
+            XCTFail()
+        }
     }
 
     func testExample2() throws {

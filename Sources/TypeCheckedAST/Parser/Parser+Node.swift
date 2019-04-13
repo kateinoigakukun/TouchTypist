@@ -28,7 +28,7 @@ func parseAttributeOrNodeOrValue() -> Parser<AttributeOrNodeOrValue> {
 }
 
 func parseAttribute() -> Parser<Attribute> {
-    return debugPrint() *> choice(
+    return choice(
         [
             Attribute.range <^> token("range=") *> parseRange(),
             Attribute.type <^> token("type=") *> parseTypeName(),
@@ -77,7 +77,7 @@ func parseUnknown() -> Parser<UnknownAttribute> {
         <|> (String.init <^> stringLiteral())
         <|> (String.init <^> unknownValue())
         <|> (
-            satisfyString(predicate: { $0 != "(" && $0 != ")" && $0 != "\n" }) >>- notEmpty
+            satisfyString(predicate: { $0 != "(" && $0 != ")" && $0 != "\n" && $0 != " " }) >>- notEmpty
     )
     return curry(UnknownAttribute.init)
         <^> (String.init <^> (satisfyString(predicate: {
