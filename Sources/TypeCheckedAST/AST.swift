@@ -1,7 +1,7 @@
 
 struct RawNode {
     let name: String
-    let attributeOrNodeOrValue: [AttributeOrNodeOrValue]
+    let attributeOrNodeOrValue: [NodeContent]
     var attributes: [Attribute] {
         return attributeOrNodeOrValue.compactMap {
             switch $0 {
@@ -66,32 +66,22 @@ struct Decl {
     let substitution: String?
 }
 
-enum AttributeOrNodeOrValue: Equatable {
+enum NodeContent: Equatable {
     case attribute(Attribute)
     case node(RawNode)
     case value(String)
+    case unknown
 }
 
 enum Attribute {
     case range(Range)
     case type(String)
     case location(Range.Point)
-    case argLabels(String)
-    case nothrow
-    case decl(Decl)
-    case __unknown(UnknownAttribute)
     case __unknownChar(Character)
     case __unknownMark(String)
-}
-
-struct UnknownAttribute {
-    let key: String
-    let value: String?
 }
 
 extension RawNode: Equatable {}
 extension Range: Equatable {}
 extension Range.Point: Equatable {}
-extension Decl: Equatable {}
-extension UnknownAttribute: Equatable {}
 extension Attribute: Equatable {}

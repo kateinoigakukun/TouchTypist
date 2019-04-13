@@ -23,12 +23,6 @@ class ParseNodeTests: XCTestCase {
         XCTAssertEqual(tail, "")
     }
 
-    func testParseAttributeIncludingSpace() throws {
-        let content = "decl=Swift.(file).Array extension.init(arrayLiteral:)"
-        let (_, tail) = try parseUnknown().parse(content)
-        XCTAssertEqual(tail, "")
-    }
-
     func testParseSuffixedNodeValue() throws {
         let content = """
         (constructor_decl range=[foo.swift:1:1 - line:3:1] "init()" type='(Int) -> ()')
@@ -49,35 +43,6 @@ class ParseNodeTests: XCTestCase {
         XCTAssertEqual(attribute, .type("(Int) -> ()"))
     }
 
-    func testParseUnknownChars() throws {
-        let content = """
-        (closure_expr discriminator=0)
-        """
-        let (node, tail) = try parseNode().parse(content)
-        XCTAssertEqual(
-            node.attributes,
-            "discriminator=0".map(Attribute.__unknownChar)
-        )
-        XCTAssertEqual(tail.count, 0)
-    }
-
-    func testParseUnknown() throws {
-        let (unknown, tail) = try parseUnknown().parse("function_ref=single")
-        XCTAssertEqual(unknown.key, "function_ref")
-        XCTAssertEqual(unknown.value, "single")
-        XCTAssertEqual(tail.count, 0)
-    }
-
-    func testParseElements() throws {
-        let content = "(tuple_shuffle_expr elements=[-2] )"
-        let (node, tail) = try! parseNode().parse(content)
-        XCTAssertEqual(
-            node.attributes,
-            "elements=[-2]".map(Attribute.__unknownChar)
-        )
-        XCTAssertEqual(tail.count, 0)
-    }
-
     func testParseSuffixedAttribute() throws {
         let content = """
         (parameter_list
@@ -86,7 +51,7 @@ class ParseNodeTests: XCTestCase {
         let (node, tail) = try! parseNode().parse(content)
         XCTAssertEqual(node.attributes.count, 1)
         XCTAssertEqual(node.children.count, 1)
-        XCTAssertEqual(node.children[0].attributes.count, 2 + "interface".count)
+        XCTAssertEqual(node.children[0].attributes.count, 2)
         XCTAssertEqual(node.children[0].value, "i")
         XCTAssert(tail.isEmpty)
     }
