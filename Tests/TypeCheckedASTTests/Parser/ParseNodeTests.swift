@@ -11,89 +11,22 @@ import Curry
 
 class ParseNodeTests: XCTestCase {
 
-    func extractDecl(_ attr: Attribute) -> Decl {
-        switch attr {
-        case .decl(let decl): return decl
-        default: fatalError()
-        }
+    func testParseAttributeIncludingParen() throws {
+        let (value, tail) = try unknownValue().parse("_getEmbeddedNSError()")
+        XCTAssertEqual(value, "_getEmbeddedNSError()")
+        XCTAssertEqual(tail, "")
     }
 
-    func extractUnknown(_ attr: Attribute) -> UnknownAttribute {
-        switch attr {
-        case .__unknown(let unknown): return unknown
-        default: fatalError()
-        }
-    }
-
-    func testExample13() throws {
-        let content = "(accessor_decl 'anonname=0x7ff65698e370' interface type='<T where T : Decodable> (Stub<T>.Injector) -> () -> [(inout T) throws -> Void]' access=internal get_for=mutations)"
-
-        do {
-            let (a, b) = try! parseAttribute().parse(" 'anonname=0x7ff65698e370' interface type='<T where T : Decodable> (Stub<T>.Injector) -> () -> [(inout T) throws -> Void]' access=internal get_for=mutations)")
-            let (c, d) = try! parseNode().parse(content)
-//            XCTAssertEqual(b.count, 0)
-        } catch {
-            print(latestDebugMessage)
-//            XCTFail(String(describing: error))
-        }
-    }
-
-    func testExample12() throws {
-        let content = """
-        (substitution_map generic_signature=<Element where Element == StubProvider>
-            (substitution Element -> <<unresolved concrete type>>))
-        """
-
-        let (a, b) = try! parseNode().parse(content)
-        XCTAssertEqual(b.count, 0)
-    }
-
-    func testExample11() throws {
-        let content = "(pattern_enum_element implicit type='EnumStubProvider.EnumKind' EnumStubProvider.EnumKind._)"
-        let (a, b) = try! parseNode().parse(content)
-        XCTAssertEqual(b.count, 0)
-    }
-
-    func testExample10() throws {
-        let content = "(declref_expr type='(UInt8.Type) -> (UInt8, Int) -> Bool' location=/Users/yuutas4/projects/StubKit/Sources/StubKit/Provider/EnumStubProvider.swift:24:37 range=[/Users/yuutas4/projects/StubKit/Sources/StubKit/Provider/EnumStubProvider.swift:24:37 - line:24:37] decl=Swift.(file).BinaryInteger extension.== [with (substitution_map generic_signature=<Self, Other where Self : BinaryInteger, Other : BinaryInteger> (substitution Self -> UInt8) (substitution Other -> Int))] function_ref=unapplied)"
-        _ = try! parseDecl().parse("Swift.(file).BinaryInteger extension.== [with (substitution_map generic_signature=<Self, Other where Self : BinaryInteger, Other : BinaryInteger> (substitution Self -> UInt8) (substitution Other -> Int))]")
-        _ = try! parseNode().parse(content)
-    }
-
-    func testExample9() throws {
-        let content = """
-        (string_literal_expr value="Class, computed property and `didSet` are not supported." builtin_initializer=Swift.(file).String extension.init(_builtinStringLiteral:utf8CodeUnitCount:isASCII:) initializer=**NULL**)
-        """
-        do {
-            try! parseNode().parse(content)
-        } catch {
-//            XCTFail(String(describing: error))
-        }
-    }
-
-    func testExample8() throws {
-        let content = """
-        (normal_conformance type=InjectionError protocol=Error
-            (value req=_getEmbeddedNSError() witness=Swift.(file).Error extension._getEmbeddedNSError()
-            )
-        )
-        """
-//        _ = try! parseUnknown().parse("req=_getEmbeddedNSError()")
-        _ = try! unknownValue().parse("_getEmbeddedNSError()")
-//        _ = try! parseNode().parse("(value req=_getEmbeddedNSError() witness=Swift.(file).Error extension._getEmbeddedNSError())")
-//        _ = try! parseNode().parse(content)
-    }
-
-    func testExample7() throws {
-        let content = "(member_ref_expr decl=Swift.(file).Sequence extension.lazy [with (substitution_map generic_signature=<Self where Self : Sequence> (substitution Self -> [StubProvider]))])"
+    func testParseNodeWithDecl() throws {
+        let content = "(member_ref_expr decl=Swift.(file).Sequence extension.lazy [with (substitution_map generic_signature=<Self where Self : Sequence> (substitution Self -> [Int]))])"
         let (_, tail) = try! parseNode().parse(content)
-        XCTAssertEqual(tail.count, 0, String(tail))
+        XCTAssertEqual(tail, "")
     }
 
-    func testExample6() throws {
-        let content = "decl=Swift.(file).Array extension.init(arrayLiteral:) [with (substitution_map generic_signature=<Element> (substitution Element -> (inout T) throws -> Void))]"
+    func testParseAttributeIncludingSpace() throws {
+        let content = "decl=Swift.(file).Array extension.init(arrayLiteral:)"
         let (_, tail) = try parseUnknown().parse(content)
-        XCTAssertEqual(tail.count, 0, String(tail))
+        XCTAssertEqual(tail, "")
     }
 
     func testParseSuffixedNodeValue() throws {
