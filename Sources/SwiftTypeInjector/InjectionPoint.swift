@@ -63,6 +63,7 @@ final class InjectionPointDetector: SyntaxRewriter {
             return super.visit(node)
         }
         let i = input.parameterList[0]
+        input.position.utf8Offset
         let colon = SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1))
         let colonedI = i.withColon(colon)
 

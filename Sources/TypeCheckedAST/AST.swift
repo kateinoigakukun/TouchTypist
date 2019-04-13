@@ -27,6 +27,10 @@ struct RawNode {
         }.first
     }
 
+    func find() {
+        
+    }
+
     func dump() {
         print(_dump())
     }
@@ -38,9 +42,15 @@ struct RawNode {
             default: return nil
             }
         }
+        let locations = attributes.compactMap { attr -> Range.Point? in
+            switch attr {
+            case .location(let point): return point
+            default: return nil
+            }
+        }
         let indent = Array(repeating: " ", count: depth).joined()
         return """
-        \(indent)(\(name) \(typeNames.map { "type=\($0)" }.joined(separator: " "))
+        \(indent)(\(name) \(typeNames.map { "type='\($0)'" }.joined(separator: " ")) \(locations.map { "location=\($0)" }.joined(separator: " "))
         \(children.map { $0._dump(depth: depth + 2) }.joined(separator: "\n"))
         \(indent))
         """
