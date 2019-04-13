@@ -22,7 +22,7 @@ func debugChoice<T>(_ ps: [Parser<T>], function: StaticString = #function) -> Pa
     return Parser { content in
         for (i, p) in ps.enumerated() {
             guard let r = try? p.parse(content) else { continue }
-            print("[choice in \(function)] selected \(i)")
+//            print("[choice in \(function)] selected \(i)")
             return r
         }
         throw ChoiceError.noMatch
@@ -75,7 +75,7 @@ var _debugPrintStack: [String] = []
 
 func debugPrint(_ id: String = #function) -> Parser<Void> {
     return Parser {
-        print("- [\(id)]: \($0.current)")
+//        print("- [\(id)]: \($0.current)")
         return ((), $0)
     }
 }
@@ -93,7 +93,7 @@ func debugPrintIfThrow<T>(_ id: String = " ", _ p: Parser<T>) -> Parser<T> {
         do {
             return try p.parse($0)
         } catch {
-            print("- [\(id)]: \(error)")
+//            print("- [\(id)]: \(error)")
             throw error
         }
     }

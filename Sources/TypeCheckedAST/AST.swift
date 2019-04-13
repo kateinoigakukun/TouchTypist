@@ -61,6 +61,7 @@ enum Attribute {
     case nothrow
     case decl(Decl)
     case __unknown(UnknownAttribute)
+    case __unknownChar(Character)
     case __unknownMark(String)
 }
 

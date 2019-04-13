@@ -34,11 +34,11 @@ func token(_ string: String, file: StaticString = #file, function: StaticString 
             text: String.SubSequence,
             file: StaticString, function: StaticString, line: Int
         ),
-        outOfBounds
+        outOfBounds(String)
     }
     return Parser { input1 in
         guard let endIndex = input1.text.index(input1.startIndex, offsetBy: string.count, limitedBy: input1.text.endIndex) else {
-            throw TokenError.outOfBounds
+            throw TokenError.outOfBounds(string)
         }
         let prefix = input1.text[input1.startIndex..<endIndex]
         guard prefix == string else {

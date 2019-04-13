@@ -30,13 +30,17 @@ func parseAttributeOrNodeOrValue() -> Parser<AttributeOrNodeOrValue> {
 func parseAttribute() -> Parser<Attribute> {
     return choice(
         [
-            Attribute.range <^> token("range=") *> parseRange(),
-            Attribute.type <^> token("type=") *> parseTypeName(),
-            Attribute.location <^> token("location=") *> parsePoint(),
-            const(Attribute.nothrow) <^> token("nothrow"),
-            curry(Attribute.decl) <^> token("decl=") *> parseDecl(),
-            Attribute.__unknown <^> parseUnknown(),
-            Attribute.__unknownMark <^> unknownMark()
+            debugPrint("1") *> (Attribute.range <^> token("range=") *> parseRange()),
+            debugPrint("2") *> (Attribute.type <^> token("type=") *> parseTypeName()),
+            debugPrint("3") *> (Attribute.location <^> token("location=") *> parsePoint()),
+            debugPrint("4") *> (Attribute.__unknownMark <^> unknownValue()),
+            debugPrint("5") *> (Attribute.__unknownChar <^> (satisfy(predicate: {
+                !["(", ")"].contains($0)
+            })))
+//            const(Attribute.nothrow) <^> token("nothrow"),
+//            curry(Attribute.decl) <^> token("decl=") *> parseDecl(),
+//            Attribute.__unknown <^> parseUnknown(),
+//            Attribute.__unknownMark <^> unknownMark()
         ]
     )
 }
@@ -59,13 +63,13 @@ func parseBox(left: Character, right: Character) -> Parser<String> {
 
 func unknownValue() -> Parser<String> {
     let boxParen: [(Character, Character)] = [
-        ("(", ")"), ("[", "]"), ("<", ">")
+        ("(", ")")//, ("[", "]"), ("<", ">")
     ]
     let chars = boxParen.flatMap { [$0.0, $0.1] } + [Character("\n")]
     let text = satisfyString(predicate: { !chars.contains($0) })
     let box = choice(boxParen.map { parseBox(left: $0.0, right: $0.1) })
-    return curry({ $0 + ($1 ?? "") + $2 })
-        <^> text <*> orNil(box) <*> text
+    return curry({ $0 + $1 + $2 })
+        <^> text <*> box <*> text
 }
 
 func parseUnknown() -> Parser<UnknownAttribute> {
