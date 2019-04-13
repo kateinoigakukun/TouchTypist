@@ -19,12 +19,17 @@ class ParserOperatorTests: XCTestCase {
     }
 
     func testOr() throws {
-        struct E: Error {}
-        let p1 = Parser.pure(1) <|> Parser<Int> { _ in throw E() }
+        struct E: ParserError {
+            var input: ParserInput { fatalError() }
+        }
+        let error = Parser<Int> { _ in
+            .failure(.init(original: E()))
+        }
+        let p1 = Parser.pure(1) <|> error
         let (result1, _) = try p1.parse("any")
         XCTAssertEqual(result1, 1)
 
-        let p2 = Parser { _ in throw E() } <|> Parser.pure(1)
+        let p2 = error <|> Parser.pure(1)
         let (result2, _) = try p2.parse("any")
         XCTAssertEqual(result2, 1)
     }

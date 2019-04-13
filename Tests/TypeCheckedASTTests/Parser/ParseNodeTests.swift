@@ -58,8 +58,10 @@ class ParseNodeTests: XCTestCase {
             .parse(rawASTString)
         XCTAssertNotEqual(nodeList.count, 0)
         XCTAssertEqual(tail.count, 0)
-        } catch {
-            print(latestDebugMessage?.prefix(5000))
+        } catch let error as ParserError {
+            if let message = error.input.debugContext?.latestDebugMessage {
+                print(message.prefix(5000))
+            }
             print(String(describing: error).prefix(5000))
             XCTFail()
         }

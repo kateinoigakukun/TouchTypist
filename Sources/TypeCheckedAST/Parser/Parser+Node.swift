@@ -30,17 +30,11 @@ func parseAttributeOrNodeOrValue() -> Parser<AttributeOrNodeOrValue> {
 func parseAttribute() -> Parser<Attribute> {
     return choice(
         [
-            debugPrint("1") *> (Attribute.range <^> token("range=") *> parseRange()),
-            debugPrint("2") *> (Attribute.type <^> token("type=") *> parseTypeName()),
-            debugPrint("3") *> (Attribute.location <^> token("location=") *> parsePoint()),
-            debugPrint("4") *> (Attribute.__unknownMark <^> unknownValue()),
-            debugPrint("5") *> (Attribute.__unknownChar <^> (satisfy(predicate: {
-                !["(", ")"].contains($0)
-            })))
-//            const(Attribute.nothrow) <^> token("nothrow"),
-//            curry(Attribute.decl) <^> token("decl=") *> parseDecl(),
-//            Attribute.__unknown <^> parseUnknown(),
-//            Attribute.__unknownMark <^> unknownMark()
+            (Attribute.range <^> token("range=") *> parseRange()),
+            (Attribute.type <^> token("type=") *> parseTypeName()),
+            (Attribute.location <^> token("location=") *> parsePoint()),
+            (Attribute.__unknownMark <^> unknownValue()),
+            (Attribute.__unknownChar <^> unknownChar()),
         ]
     )
 }
@@ -49,13 +43,24 @@ func unknownMark() -> Parser<String> {
     return satisfyString(predicate: { $0 != "(" && $0 != ")" }) >>- notEmpty
 }
 
+func unknownChar() -> Parser<Character> {
+    return satisfy(predicate: { !["(", ")"].contains($0) })
+}
+
 func parseBox(left: Character, right: Character) -> Parser<String> {
     let contentText = satisfyString(predicate: {
         return ![left, right].contains($0) && $0 != "\n"
     })
-    let notEmpty = Parser<Void> { _ in
-        enum BoxParsingError: Error { case breakParsingContent }
-        throw BoxParsingError.breakParsingContent
+    let notEmpty = Parser<Void> { input in
+        enum BoxParsingError: ParserError {
+            case breakParsingContent(ParserInput)
+            var input: ParserInput {
+                switch self {
+                case .breakParsingContent(let input): return input
+                }
+            }
+        }
+        return .failure(.init(original: BoxParsingError.breakParsingContent(input)))
     }
     let content = { $0.joined() } <^> many(notEmpty *> (parseBox(left: left, right: right) <|> contentText))
     return curry({ String($0) + $1 + String($2) }) <^> char(left) <*> content <*> char(right)
@@ -89,10 +94,6 @@ func parseUnknown() -> Parser<UnknownAttribute> {
         }) >>- notEmpty))
         <*> (Optional.some <^> (token("=") *> value) <|> .pure(nil))
 }
-
-let join4: (String, String, String, String) -> String = { $0 + $1 + $2 + $3 }
-let join3: (String, String, String) -> String = { $0 + $1 + $2 }
-let join2: (String, String) -> String = { $0 + $1 }
 
 func declSignature() -> Parser<String> {
     // foo(arg:)
@@ -130,22 +131,11 @@ func parseDecl() -> Parser<Decl> {
 }
 
 func parenRec() -> Parser<String> {
-    let parenContent = satisfyString(predicate: {
-        $0 != "(" && $0 != ")" && $0 != "[" && $0 != "]"
-    })
-    let bracketBox = curry(join3)
-        <^> token("[")
-        <*> parenContent
-        <*> (curry(join3) <^> (parenRec() <|> .pure(.init())) <*> parenContent <*> token("]"))
-
-    // FIXME
-    let parenBox = curry(join4)
-        <^> Parser.pure(" ")
-        <*> token("(")
-        <*> parenContent
-        <*> (curry(join3) <^> (parenRec() <|> .pure("")) <*> parenContent <*> token(")"))
+    let boxes = [("(", ")"), ("[", "]")].map {
+        parseBox(left: $0.0, right: $0.1)
+    }
     return { $0.joined() } <^> many(
-        skipSpaces() *> (parenBox <|> bracketBox) <* skipSpaces()
+        skipSpaces() *> (choice(boxes)) <* skipSpaces()
     )
 }
 

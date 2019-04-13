@@ -39,10 +39,8 @@ infix operator >>- : MonadicPrecedenceLeft
 @inline(__always)
 func <|> <T>(a: Parser<T>, b: @autoclosure @escaping () -> Parser<T>) -> Parser<T> {
     return Parser { input in
-        do {
-            return try a.parse(input)
-        } catch {
-            return try b().parse(input)
+        return a.parse(input).flatMapError { _ in
+            b().parse(input)
         }
     }
 }
@@ -52,18 +50,17 @@ import Foundation
 @inline(__always)
 func <*> <A, B>(a: Parser<(A) -> B>, b: @autoclosure @escaping () -> Parser<A>) -> Parser<B> {
 //    return a.flatMap { f in b().map { f($0) } }
-    return Parser<B> { content in
-        let (f, tailA) = try a.parse(content)
-        let (arg, tailB) = try b().parse(tailA)
-        return (f(arg), tailB)
+    return Parser<B> { input in
+        return a.parse(input).flatMap { (f, tailA) in
+            b().parse(tailA).map { (f($0), $1) }
+        }
     }
 }
 
 @inline(__always)
 func <^> <A, B>(f: @escaping (A) -> B, p: @autoclosure @escaping () -> Parser<A>) -> Parser<B> {
-    return Parser { content in
-        let (a, tailA) = try p().parse(content)
-        return (f(a), tailA)
+    return Parser { input in
+        return p().parse(input).map { (f($0), $1) }
     }
 }
 
@@ -75,18 +72,19 @@ func >>- <A, B>(p: Parser<A>, f: @escaping (A) -> Parser<B>) -> Parser<B> {
 @inline(__always)
 func *> <A, B>(a: Parser<A>, b: Parser<B>) -> Parser<B> {
 //    return const(id) <^> a <*> b
-    return Parser<B> { content in
-        let (_, tailA) = try a.parse(content)
-        return try b.parse(tailA)
+    return Parser<B> { input in
+        a.parse(input).flatMap {
+            b.parse($1)
+        }
     }
 }
 
 @inline(__always)
 func <* <A, B>(a: Parser<A>, b: Parser<B>) -> Parser<A> {
 //    return const <^> a <*> b
-    return Parser<A> { content in
-        let (resultA, tailA) = try a.parse(content)
-        let (_, tailB) = try b.parse(tailA)
-        return (resultA, tailB)
+    return Parser<A> { input in
+        return a.parse(input).flatMap { (resultA, tailA) in
+            b.parse(tailA).map { (resultA, $1) }
+        }
     }
 }

@@ -26,34 +26,45 @@ func number() -> Parser<Int> {
     return many1(digit()).map { Int(String($0))! }
 }
 
-func token(_ string: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) -> Parser<String> {
-    enum TokenError: Error {
-        case not(
-            String,
-            input: ParserInput,
-            text: String.SubSequence,
-            file: StaticString, function: StaticString, line: Int
-        ),
-        outOfBounds(String)
+enum TokenError: ParserError {
+    case not(
+        String,
+        input: ParserInput,
+        text: String.SubSequence,
+        file: StaticString, function: StaticString, line: Int
+    ),
+    outOfBounds(String, input: ParserInput)
+
+    var input: ParserInput {
+        switch self {
+        case .not(_, let input, _, _, _, _):
+            return input
+        case .outOfBounds(_, let input):
+            return input
+        }
     }
+}
+
+func token(_ string: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) -> Parser<String> {
     return Parser { input1 in
         guard let endIndex = input1.text.index(input1.startIndex, offsetBy: string.count, limitedBy: input1.text.endIndex) else {
-            throw TokenError.outOfBounds(string)
+            return .failure(.init(original: TokenError.outOfBounds(string, input: input1)))
         }
         let prefix = input1.text[input1.startIndex..<endIndex]
         guard prefix == string else {
-            throw TokenError.not(
+            let error = TokenError.not(
                 string, input: input1,
                 text: input1.text[input1.startIndex...],
                 file: file, function: function, line: line
             )
+            return .failure(.init(original: error))
         }
         let newStartIndex = input1.text.index(input1.startIndex, offsetBy: string.count)
         let input2 = ParserInput(
-            text: input1.text,
-            startIndex: newStartIndex
+            previous: input1,
+            index: newStartIndex
         )
-        return (String(prefix), input2)
+        return .success((String(prefix), input2))
     }
 }
 
@@ -62,13 +73,22 @@ func registeredSymbol() -> [Character] {
 }
 
 func notEmpty(_ s: String) -> Parser<String> {
-    guard !s.isEmpty else {
-        return .fail(KeywordError.empty)
+    return Parser { input in
+        guard !s.isEmpty else {
+            return .failure(.init(original: KeywordError.empty(input)))
+        }
+        return .success((s, input))
     }
-    return .pure(s)
 }
 
-enum KeywordError: Error { case empty }
+enum KeywordError: ParserError {
+    case empty(ParserInput)
+    var input: ParserInput {
+        switch self {
+        case .empty(let input): return input
+        }
+    }
+}
 func keyword() -> Parser<String> {
 
     return satisfyString(predicate: { k in

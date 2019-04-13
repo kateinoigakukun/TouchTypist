@@ -4,13 +4,16 @@ public func benchmark(text: String) {
     func m(_ p: Parser<RawNode>) -> Parser<[RawNode]> {
         return cons <^> p <*> m(p)
     }
-    do {
-        let (nodeList, tail) = try m(skipSpaces() *> parseNode() <* skipSpaces())
-            .parse(ParserInput(text: text, startIndex: text.startIndex))
+    let p = m(skipSpaces() *> parseNode() <* skipSpaces())
+    switch p.parse(.root(from: text)) {
+    case .success(let (nodeList, tail)):
         assert(nodeList.count != 0)
         assert(tail.current.isEmpty)
-    } catch {
-        print(latestDebugMessage?.prefix(5000))
+    case .failure(let error):
+        if let debugContext = error.input.debugContext,
+            let latestDebugMessage = debugContext.latestDebugMessage {
+            print(latestDebugMessage.prefix(5000))
+        }
         print(String(describing: error).prefix(5000))
     }
 }
