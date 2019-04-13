@@ -24,7 +24,3 @@ func cons<E>(x: E) -> ([E]) -> [E] {
         return xs
     }
 }
-
-let join4: (String, String, String, String) -> String = { $0 + $1 + $2 + $3 }
-let join3: (String, String, String) -> String = { $0 + $1 + $2 }
-let join2: (String, String) -> String = { $0 + $1 }
