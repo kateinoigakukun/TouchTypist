@@ -27,8 +27,41 @@ struct RawNode {
         }.first
     }
 
-    func find() {
-        
+    var location: Range.Point? {
+        return attributes.lazy.compactMap {
+            switch $0 {
+            case .location(let point): return point
+            default: return nil
+            }
+        }.first
+    }
+
+    func find(line: Int, column: Int) -> RawNode? {
+        func findChildren() -> RawNode? {
+            if !children.isEmpty {
+                let hitNodes = children.compactMap {
+                    $0.find(line: line, column: column)
+                }
+                return hitNodes.first
+            }
+            return nil
+        }
+        guard let location = location else {
+            return findChildren()
+        }
+        guard line >= location.line else {
+            return nil
+        }
+        if line == location.line {
+            if column >= location.column {
+                if column == location.column {
+                    return self
+                }
+            } else {
+                return nil
+            }
+        }
+        return findChildren()
     }
 
     func dump() {
@@ -42,15 +75,17 @@ struct RawNode {
             default: return nil
             }
         }
+        let typeNamesString = typeNames.map { "type='\($0)'" }.joined(separator: " ")
         let locations = attributes.compactMap { attr -> Range.Point? in
             switch attr {
             case .location(let point): return point
             default: return nil
             }
         }
+        let locationsString = locations.map { "location=\($0)" }.joined(separator: " ")
         let indent = Array(repeating: " ", count: depth).joined()
         return """
-        \(indent)(\(name) \(typeNames.map { "type='\($0)'" }.joined(separator: " ")) \(locations.map { "location=\($0)" }.joined(separator: " "))
+        \(indent)(\(name) \(typeNamesString) \(locationsString)
         \(children.map { $0._dump(depth: depth + 2) }.joined(separator: "\n"))
         \(indent))
         """
