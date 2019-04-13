@@ -22,7 +22,7 @@ let package = Package(
             dependencies: ["TypeCheckedAST"]),
         .target(
             name: "SwiftTypeInjector",
-            dependencies: ["SwiftSyntax", "SourceKittenFramework"]),
+            dependencies: ["TypeCheckedAST", "SwiftSyntax", "SourceKittenFramework"]),
         .target(
             name: "TypeCheckedAST",
             dependencies: ["Curry"]),

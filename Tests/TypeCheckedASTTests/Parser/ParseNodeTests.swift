@@ -70,7 +70,7 @@ class ParseNodeTests: XCTestCase {
         )
         let child = RawNode(
             name: "top_level_code_decl",
-            attributeOrNodeOrValue: [.attribute(.range(range))]
+            nodeContents: [.attribute(.range(range))]
         )
         XCTAssertEqual(node.children, Array(repeating: child, count: 2))
     }
@@ -118,7 +118,7 @@ class ParseNodeTests: XCTestCase {
         let attribute = Attribute.range(range)
         let expectedNode = RawNode(
             name: "top_level_code_decl",
-            attributeOrNodeOrValue: [.attribute(attribute)]
+            nodeContents: [.attribute(attribute)]
         )
         XCTAssertEqual(node, expectedNode)
     }

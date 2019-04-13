@@ -1,25 +1,25 @@
 
-struct RawNode {
-    let name: String
-    let attributeOrNodeOrValue: [NodeContent]
-    var attributes: [Attribute] {
-        return attributeOrNodeOrValue.compactMap {
+public struct RawNode {
+    public let name: String
+    public let nodeContents: [NodeContent]
+    public var attributes: [Attribute] {
+        return nodeContents.compactMap {
             switch $0 {
             case .attribute(let attr): return attr
             default: return nil
             }
         }
     }
-    var children: [RawNode] {
-        return attributeOrNodeOrValue.compactMap {
+    public var children: [RawNode] {
+        return nodeContents.compactMap {
             switch $0 {
             case .node(let node): return node
             default: return nil
             }
         }
     }
-    var value: String? {
-        return attributeOrNodeOrValue.lazy.compactMap {
+    public var value: String? {
+        return nodeContents.lazy.compactMap {
             switch $0 {
             case .value(let value): return value
             default: return nil
@@ -27,7 +27,7 @@ struct RawNode {
         }.first
     }
 
-    var location: Range.Point? {
+    public var location: Range.Point? {
         return attributes.lazy.compactMap {
             switch $0 {
             case .location(let point): return point
@@ -36,30 +36,41 @@ struct RawNode {
         }.first
     }
 
-    func find(line: Int, column: Int) -> RawNode? {
+    public var range: Range? {
+        return attributes.lazy.compactMap {
+            switch $0 {
+            case .range(let range): return range
+            default: return nil
+            }
+        }.first
+    }
+
+    public func find(point: Range.Point) -> RawNode? {
         func findChildren() -> RawNode? {
             guard !children.isEmpty else { return nil }
             let hitNodes = children.compactMap {
-                $0.find(line: line, column: column)
+                $0.find(point: point)
             }
             return hitNodes.first
         }
         guard let location = location else {
-            return findChildren()
+            guard let range = range else { return findChildren() }
+            if range.contains(point) {
+                return findChildren() ?? self
+            } else {
+                return findChildren()
+            }
         }
-
-        switch (location.line, location.column) {
-        case (line, column):
+        if location == point {
             return self
-        case (line, ...column), (...line, _):
-            return findChildren()
-        case (line..., _):
+        } else if location > point {
             return nil
-        default: fatalError()
+        } else {
+            return findChildren()
         }
     }
 
-    func dump() {
+    public func dump() {
         print(_dump())
     }
 
@@ -87,33 +98,48 @@ struct RawNode {
     }
 }
 
-struct Range {
-    struct Point: CustomStringConvertible {
-        let fileName: String
-        let line: Int
-        let column: Int
+public struct Range {
+    public struct Point: CustomStringConvertible {
+        public let fileName: String
+        public let line: Int
+        public let column: Int
 
-        var description: String {
+        public var description: String {
             return "\(fileName):\(line):\(column)"
         }
     }
-    let start: Point
-    let end: Point
+    public let start: Point
+    public let end: Point
+
+    func contains(_ point: Point) -> Bool {
+        switch (point.line, point.column) {
+        case (start.line, start.column):
+            return true
+        case (end.line, end.column):
+            return true
+        case (start.line..<end.line, _):
+            return true
+        case (start.line, start.column...end.column) where start.line == end.line:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
-struct Decl {
-    let value: String
-    let substitution: String?
+public struct Decl {
+    public let value: String
+    public let substitution: String?
 }
 
-enum NodeContent: Equatable {
+public enum NodeContent: Equatable {
     case attribute(Attribute)
     case node(RawNode)
     case value(String)
     case unknown
 }
 
-enum Attribute {
+public enum Attribute {
     case range(Range)
     case type(String)
     case location(Range.Point)
@@ -124,4 +150,19 @@ enum Attribute {
 extension RawNode: Equatable {}
 extension Range: Equatable {}
 extension Range.Point: Equatable {}
+extension Range.Point: Comparable {
+    public static func < (lhs: Range.Point, rhs: Range.Point) -> Bool {
+        switch (lhs.line, lhs.column) {
+        case (rhs.line, rhs.column):
+            return false
+        case (rhs.line, ..<rhs.column):
+            return true
+        case (..<rhs.line, _):
+            return true
+        case (rhs.line..., _):
+            return false
+        default: fatalError()
+        }
+    }
+}
 extension Attribute: Equatable {}

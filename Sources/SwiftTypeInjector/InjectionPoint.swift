@@ -19,13 +19,16 @@ enum InjectionPoint {
 
 extension InjectionPoint: Equatable {}
 
+import TypeCheckedAST
 import SwiftSyntax
 import SourceKittenFramework
 
 final class InjectionPointDetector: SyntaxRewriter {
     let filePath: URL
-    init(filePath: URL) {
+    let node: RawNode
+    init(filePath: URL, node: RawNode) {
         self.filePath = filePath
+        self.node = node
     }
 
     override func visit(_ node: VariableDeclSyntax) -> DeclSyntax {
@@ -37,6 +40,7 @@ final class InjectionPointDetector: SyntaxRewriter {
             guard let patternIdentifier = binding.pattern as? IdentifierPatternSyntax else {
                 return bindings
             }
+            let node = self.node
             let request = Request.cursorInfo(
                 file: filePath.path,
                 offset: Int64(binding.position.utf8Offset),
