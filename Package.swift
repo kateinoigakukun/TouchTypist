@@ -16,9 +16,6 @@ let package = Package(
         .executable(
             name: "xcode-ast-dump-wrapper",
             targets: ["xcode-ast-dump-wrapper"]),
-        .executable(
-            name: "benchmark",
-            targets: ["Benchmark"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax.git", .exact("0.50000.0")),
@@ -34,9 +31,6 @@ let package = Package(
         .target(
             name: "xcode-ast-dump-wrapper",
             dependencies: ["SwiftTypeInjector"]),
-        .target(
-            name: "Benchmark",
-            dependencies: ["TypeCheckedAST"]),
         .target(
             name: "SwiftTypeInjector",
             dependencies: ["TypeCheckedAST", "SwiftSyntax"]),
