@@ -63,7 +63,7 @@ final class ClosureExprWriter {
     func addTypeAnnotation(to parameter: ClosureParamSyntax, parameterListNode node: DumpedNode) -> FunctionParameterSyntax {
         let funcParameter = SyntaxFactory.makeFunctionParameter(
             attributes: nil, firstName: parameter.name.withoutTrailingTrivia(), secondName: nil,
-            colon: SyntaxFactory.makeColonToken(trailingTrivia: .spaces(1)),
+            colon: nil,
             type: nil,
             ellipsis: nil, defaultArgument: nil, trailingComma: nil
         )
@@ -72,7 +72,9 @@ final class ClosureExprWriter {
             return funcParameter
         }
         guard let typeName = foundNode.type else { return funcParameter }
-        return funcParameter.withType(SyntaxFactory.makeTypeIdentifier(typeName))
+        return funcParameter
+            .withColon(SyntaxFactory.makeColonToken(trailingTrivia: .spaces(1)))
+            .withType(SyntaxFactory.makeTypeIdentifier(typeName))
     }
 
 

@@ -120,6 +120,29 @@ class TypeAnnotationWriterTests: XCTestCase {
             """
         )
     }
+
+    func testClosureAnonymousArgument() {
+
+        let file = createSourceFile(from:
+            """
+            func const<A, B>(_ a: A) -> (B) -> A {
+                return { _ in return a }
+            }
+            """
+        )
+
+        let syntax = try! SyntaxTreeParser.parse(file)
+        let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
+        let result = TypeAnnotationWriter(node: node).visit(syntax)
+        XCTAssertEqual(
+            result.description,
+            """
+            func const<A, B>(_ a: A) -> (B) -> A {
+                return { (_) -> A in return a }
+            }
+            """
+        )
+    }
 }
 
 func createSourceFile(from input: String) -> URL {
