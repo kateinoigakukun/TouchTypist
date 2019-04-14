@@ -52,7 +52,10 @@ func parseNominal() -> Parser<String> {
 }
 
 func parseTuple() -> Parser<[Type]> {
-    return char("(") *> many(parseType()) <* char(")")
+    let head = parseType()
+    let tailTypes = many(skipSpaces() *> char(",") *> skipSpaces() *> parseType())
+    let types = cons <^> head <*> tailTypes
+    return char("(") *> types <* char(")")
 }
 
 func parseFunctionType() -> Parser<FunctionType> {

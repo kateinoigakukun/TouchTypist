@@ -59,7 +59,7 @@ class TypeAnnotationWriterTests: XCTestCase {
         let file = createSourceFile(from:
             """
             [1, 2, 3].map { (i) in
-                return i.description
+                return (i.description, i)
             }
             """
         )
@@ -70,8 +70,8 @@ class TypeAnnotationWriterTests: XCTestCase {
         XCTAssertEqual(
             result.description,
             """
-            [1, 2, 3].map { (i: Int) -> String in
-                return i.description
+            [1, 2, 3].map { (i: Int) -> (String, Int) in
+                return (i.description, i)
             }
             """
         )

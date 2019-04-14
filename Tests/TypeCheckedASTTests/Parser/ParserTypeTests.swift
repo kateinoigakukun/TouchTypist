@@ -14,5 +14,9 @@ class ParserTypeTests: XCTestCase {
         let type1 = try parseFunctionType("(Int) -> Void")
         XCTAssertEqual(type1.input, .tuple([.nominal("Int")]))
         XCTAssertEqual(type1.output, .nominal("Void"))
+
+        let type2 = try parseFunctionType("(Int) -> (String, Int)")
+        XCTAssertEqual(type2.input, .tuple([.nominal("Int")]))
+        XCTAssertEqual(type2.output, .tuple([.nominal("String"), .nominal("Int")]))
     }
 }
