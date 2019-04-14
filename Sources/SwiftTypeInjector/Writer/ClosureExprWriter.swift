@@ -26,28 +26,28 @@ final class ClosureExprWriter {
                 return syntax
         }
 
-        let typedParameterList = parameterList.enumerated().map { element -> FunctionParameterSyntax in
+        let typedParameterList: [FunctionParameterSyntax] = parameterList.enumerated().map { element -> FunctionParameterSyntax in
             let (index, param) = element
-            let newType = self.addTypeAnnotation(to: param, parameterListNode: parameterListNode)
-            let isLast = index == parameterList.count-1
+            let newType: FunctionParameterSyntax = self.addTypeAnnotation(to: param, parameterListNode: parameterListNode)
+            let isLast: Bool = index == parameterList.count-1
             if isLast {
                 return newType
             } else {
                 return newType.withTrailingComma(SyntaxFactory.makeCommaToken(trailingTrivia: .spaces(1)))
             }
         }
-        let newParameterList = SyntaxFactory.makeFunctionParameterList(typedParameterList)
-        let parameterClause = SyntaxFactory.makeParameterClause(
+        let newParameterList: FunctionParameterListSyntax = SyntaxFactory.makeFunctionParameterList(typedParameterList)
+        let parameterClause: ParameterClauseSyntax = SyntaxFactory.makeParameterClause(
             leftParen: SyntaxFactory.makeLeftParenToken(),
             parameterList: newParameterList,
             rightParen: SyntaxFactory.makeRightParenToken()
         )
-        var newSignature = syntax.signature?.withInput(parameterClause)
+        var newSignature: ClosureSignatureSyntax? = syntax.signature?.withInput(parameterClause)
 
         if let _ = syntax.signature?.output {
             return syntax.withSignature(newSignature)
         }
-        let output = SyntaxFactory.makeReturnClause(
+        let output: ReturnClauseSyntax = SyntaxFactory.makeReturnClause(
             arrow: SyntaxFactory.makeArrowToken(leadingTrivia: .spaces(1)),
             returnType: SyntaxFactory.makeTypeIdentifier(
                 closureType.output.description,
@@ -61,7 +61,7 @@ final class ClosureExprWriter {
     }
 
     func addTypeAnnotation(to parameter: ClosureParamSyntax, parameterListNode node: DumpedNode) -> FunctionParameterSyntax {
-        let funcParameter = SyntaxFactory.makeFunctionParameter(
+        let funcParameter: FunctionParameterSyntax = SyntaxFactory.makeFunctionParameter(
             attributes: nil, firstName: parameter.name.withoutTrailingTrivia(), secondName: nil,
             colon: nil,
             type: nil,
@@ -92,21 +92,21 @@ final class ClosureExprWriter {
                 return syntax
         }
 
-        let typedParameterList = input.parameterList.map {
+        let typedParameterList: [FunctionParameterSyntax] = input.parameterList.map {
             self.addTypeAnnotation(to: $0, parameterListNode: parameterListNode)
         }
-        let newParameterList = typedParameterList.enumerated()
-            .reduce(input.parameterList) { parameterList, element in
+        let newParameterList: FunctionParameterListSyntax = typedParameterList.enumerated()
+            .reduce(input.parameterList) { (parameterList: FunctionParameterListSyntax, element: (offset: Int, element: FunctionParameterSyntax)) -> FunctionParameterListSyntax in
                 let (index, parameter) = element
                 return parameterList.replacing(childAt: index, with: parameter)
         }
-        let newInput = input.withParameterList(newParameterList)
+        let newInput: ParameterClauseSyntax = input.withParameterList(newParameterList)
 
         if let _ = syntax.signature?.output {
-            let newSignature = syntax.signature?.withInput(newInput)
+            let newSignature: ClosureSignatureSyntax? = syntax.signature?.withInput(newInput)
             return syntax.withSignature(newSignature)
         }
-        let output = SyntaxFactory.makeReturnClause(
+        let output: ReturnClauseSyntax = SyntaxFactory.makeReturnClause(
             arrow: SyntaxFactory.makeArrowToken(),
             returnType: SyntaxFactory.makeTypeIdentifier(
                 closureType.output.description,
@@ -114,7 +114,7 @@ final class ClosureExprWriter {
                 trailingTrivia: .spaces(1)
             )
         )
-        let newSignature = syntax.signature?.withInput(newInput).withOutput(output)
+        let newSignature: ClosureSignatureSyntax? = syntax.signature?.withInput(newInput).withOutput(output)
         return syntax.withSignature(newSignature)
     }
 
@@ -127,8 +127,8 @@ final class ClosureExprWriter {
             let typeName = foundNode.type else {
             return parameter
         }
-        let colon = SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1))
-        let type = SyntaxFactory.makeTypeIdentifier(typeName)
+        let colon: TokenSyntax = SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1))
+        let type: TypeSyntax = SyntaxFactory.makeTypeIdentifier(typeName)
         return parameter.withColon(colon).withType(type)
     }
 }
