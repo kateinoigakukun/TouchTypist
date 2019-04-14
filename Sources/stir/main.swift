@@ -75,7 +75,6 @@ func xcode() {
 
 
     let strippedArguments = stripArguments(arguments)
-    print(strippedArguments)
 
     let process = Process()
     process.launchPath = swiftcPath.path
