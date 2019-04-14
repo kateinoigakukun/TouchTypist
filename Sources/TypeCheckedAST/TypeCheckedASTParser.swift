@@ -19,6 +19,10 @@ public final class TypeCheckedASTParser {
 
     public func parse(astFile: URL, swiftcURL: URL? = nil) throws -> [DumpedNode] {
         let content = try String(contentsOf: astFile)
+        return try parse(content: content, swiftcURL: swiftcURL)
+    }
+
+    public func parse(content: String, swiftcURL: URL? = nil) throws -> [DumpedNode] {
         let (nodeList, _) = try many1(parseNode()).parse(.root(from: content)).get()
         return nodeList
     }

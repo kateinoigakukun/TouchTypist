@@ -73,4 +73,36 @@ public struct SwiftcInvocator {
         }
         return result
     }
+
+
+    public static func stripXcodeArgumentsForASTDump(_ arguments: [String]) -> [String] {
+        var stripped: [String] = []
+        var index = arguments.startIndex
+        var argument: String { return arguments[index] }
+        while index != arguments.endIndex {
+            switch argument {
+            case "-incremental",
+                 "-enable-batch-mode",
+                 "-emit-dependencies",
+                 "-emit-module",
+                 "-emit-objc-header",
+                 "-parseable-output",
+                 "-serialize-diagnostics":
+                index = arguments.index(after: index)
+            case "-emit-module-path",
+                 "-emit-objc-header-path",
+                 "-output-file-map",
+                 "-index-store-path":
+                index = arguments.index(after: index)
+                index = arguments.index(after: index)
+            case "-c":
+                stripped.append("-dump-ast")
+                index = arguments.index(after: index)
+            default:
+                stripped.append(argument)
+                index = arguments.index(after: index)
+            }
+        }
+        return stripped
+    }
 }

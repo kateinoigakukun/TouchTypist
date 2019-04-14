@@ -11,6 +11,12 @@ let package = Package(
             name: "stir",
             targets: ["stir"]),
         .executable(
+            name: "stir-xcode-wrapper",
+            targets: ["stir-xcode-wrapper"]),
+        .executable(
+            name: "xcode-ast-dump-wrapper",
+            targets: ["xcode-ast-dump-wrapper"]),
+        .executable(
             name: "benchmark",
             targets: ["Benchmark"])
     ],
@@ -21,6 +27,12 @@ let package = Package(
     targets: [
         .target(
             name: "stir",
+            dependencies: ["SwiftTypeInjector"]),
+        .target(
+            name: "stir-xcode-wrapper",
+            dependencies: ["SwiftTypeInjector"]),
+        .target(
+            name: "xcode-ast-dump-wrapper",
             dependencies: ["SwiftTypeInjector"]),
         .target(
             name: "Benchmark",
