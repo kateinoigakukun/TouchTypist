@@ -10,7 +10,7 @@ import SwiftSyntax
 @testable import TypeCheckedAST
 @testable import SwiftTypeInjector
 
-class InjectionPointTests: XCTestCase {
+class TypeAnnotationWriterTests: XCTestCase {
 
     func testDetectSubstitution() {
         let file = createSourceFile(from:

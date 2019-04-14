@@ -96,8 +96,8 @@ func parseRange() -> Parser<Range> {
         <* token("]")
 }
 
-func parsePoint() -> Parser<Range.Point> {
-    return curry(Range.Point.init)
+func parsePoint() -> Parser<Point> {
+    return curry(Point.init)
         <^> (
           String.init <^> satisfyString(predicate: {
             $0 != ":" && $0 != "\n" && $0 != " "

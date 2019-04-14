@@ -10,7 +10,7 @@ import XCTest
 
 class FindNodeTests: XCTestCase {
 
-    func location(_ line: Int, _ column: Int, fileName: String = "foo.swift") -> Range.Point {
+    func location(_ line: Int, _ column: Int, fileName: String = "foo.swift") -> Point {
         return .init(fileName: fileName, line: line, column: column)
     }
 
@@ -96,6 +96,7 @@ class FindNodeTests: XCTestCase {
         XCTAssertTrue(range((1, 1), (1, 2)).contains(location(1, 2)))
         XCTAssertTrue(range((1, 1), (3, 2)).contains(location(2, 1)))
         XCTAssertTrue(range((1, 1), (1, 3)).contains(location(1, 2)))
+        XCTAssertTrue(range((1, 1), (3, 3)).contains(location(1, 10)))
         XCTAssertFalse(range((1, 1), (1, 3)).contains(location(1, 4)))
     }
 }
@@ -104,7 +105,7 @@ extension DumpedNode {
 
     init(name: String,
          range: Range? = nil,
-         location: Range.Point? = nil,
+         location: Point? = nil,
          children: [DumpedNode] = []) {
         var attributes = [Attribute]()
         if let range = range {

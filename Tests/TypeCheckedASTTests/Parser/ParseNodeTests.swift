@@ -29,8 +29,8 @@ class ParseNodeTests: XCTestCase {
         """
         let (node, tail) = try parseNode().parse(content)
         let range = Range(
-            start: Range.Point(fileName: "foo.swift", line: 1, column: 1),
-            end: Range.Point(fileName: "line", line: 3, column: 1)
+            start: Point(fileName: "foo.swift", line: 1, column: 1),
+            end: Point(fileName: "line", line: 3, column: 1)
         )
         XCTAssertEqual(tail.count, 0)
         XCTAssertEqual(node.value, "init()")
@@ -65,8 +65,8 @@ class ParseNodeTests: XCTestCase {
         let (node, _) = try parseNode().parse(content)
         XCTAssertEqual(node.children.count, 2)
         let range = Range(
-            start: Range.Point(fileName: "foo.swift", line: 1, column: 1),
-            end: Range.Point(fileName: "line", line: 3, column: 1)
+            start: Point(fileName: "foo.swift", line: 1, column: 1),
+            end: Point(fileName: "line", line: 3, column: 1)
         )
         let child = DumpedNode(
             name: "top_level_code_decl",
@@ -112,8 +112,8 @@ class ParseNodeTests: XCTestCase {
         let content = "(top_level_code_decl range=[foo.swift:1:1 - line:3:1])"
         let (node, _) = try parseNode().parse(content)
         let range = Range(
-            start: Range.Point(fileName: "foo.swift", line: 1, column: 1),
-            end: Range.Point(fileName: "line", line: 3, column: 1)
+            start: Point(fileName: "foo.swift", line: 1, column: 1),
+            end: Point(fileName: "line", line: 3, column: 1)
         )
         let attribute = Attribute.range(range)
         let expectedNode = DumpedNode(
@@ -126,7 +126,7 @@ class ParseNodeTests: XCTestCase {
     func testParseMultipleAttributes() throws {
         let content = "(call_expr type='[String]' location=foo.swift:1:11)"
         let (node, _) = try parseNode().parse(content)
-        let location = Range.Point(
+        let location = Point(
             fileName: "foo.swift",
             line: 1,
             column: 11

@@ -1,7 +1,5 @@
-import Foundation
 import TypeCheckedAST
 import SwiftSyntax
-import SourceKittenFramework
 
 final class TypeAnnotationWriter: SyntaxRewriter {
     let node: DumpedNode

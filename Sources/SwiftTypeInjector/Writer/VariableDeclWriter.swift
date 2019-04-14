@@ -10,8 +10,7 @@ final class VariableDeclWriter {
             guard let patternIdentifier = binding.pattern as? IdentifierPatternSyntax else {
                 return bindings
             }
-            let position = binding.position
-            let point = Range.Point(fileName: "filePath.path", line: position.line, column: position.column)
+            let point = Point(position: binding.position)
             guard let foundNode = node.find(point: point) else { return bindings }
             guard foundNode.name == "pattern_binding_decl" else { return bindings }
             guard let patternNamed = foundNode.children.first(where: { $0.name == "pattern_named" }) else {
