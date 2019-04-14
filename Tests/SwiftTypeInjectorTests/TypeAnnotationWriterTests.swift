@@ -44,8 +44,8 @@ class TypeAnnotationWriterTests: XCTestCase {
 //        )
 //
 //        let syntax = try! SyntaxTreeParser.parse(file)
-//        let dumpedNode = astNode(for: file)
-//        let result = InjectionPointDetector(filePath: file, node: dumpedNode).visit(syntax)
+//        let dumpedNode = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
+//        let result = TypeAnnotationWriter(node: dumpedNode).visit(syntax)
 //
 //        XCTAssertEqual(
 //            result.description,

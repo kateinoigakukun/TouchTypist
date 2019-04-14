@@ -12,6 +12,7 @@ final class ClosureExprWriter {
         return syntax
     }
 
+    // map { i in }
     func write(_ syntax: ClosureExprSyntax, parameterList: ClosureParamListSyntax, node: DumpedNode) -> ClosureExprSyntax {
         guard let parenNode = node.find(point: Point(position: syntax.position)),
             let closureNode = parenNode.find(where: { $0.name == "closure_expr" }),
@@ -74,6 +75,8 @@ final class ClosureExprWriter {
         return funcParameter.withType(SyntaxFactory.makeTypeIdentifier(typeName))
     }
 
+
+    // map { (i) in }
     func write(_ syntax: ClosureExprSyntax, input: ParameterClauseSyntax, node: DumpedNode) -> ClosureExprSyntax {
         guard let parenNode = node.find(point: Point(position: syntax.position)),
             let closureNode = parenNode.find(where: { $0.name == "closure_expr" }),

@@ -13,7 +13,6 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-syntax.git", .exact("0.50000.0")),
-        .package(url: "https://github.com/jpsim/SourceKitten.git", .exact("0.22.0")),
         .package(url: "https://github.com/thoughtbot/Curry.git", from: "4.0.2"),
     ],
     targets: [
@@ -22,7 +21,7 @@ let package = Package(
             dependencies: ["TypeCheckedAST"]),
         .target(
             name: "SwiftTypeInjector",
-            dependencies: ["TypeCheckedAST", "SwiftSyntax", "SourceKittenFramework"]),
+            dependencies: ["TypeCheckedAST", "SwiftSyntax"]),
         .target(
             name: "TypeCheckedAST",
             dependencies: ["Curry"]),
