@@ -1,3 +1,6 @@
-struct SwiftTypeInjector {
-    var text = "Hello, World!"
+import SwiftSyntax
+
+final class SwiftTypeInjector {
+    func rewrite(syntax: SourceFileSyntax) {
+    }
 }

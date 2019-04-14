@@ -31,10 +31,27 @@ struct SwiftcInvocator {
     }
 
     private static let _swiftcURL: URL? = SwiftcInvocator.locateSwiftc()
+    private let swiftcURL: URL
+    private let sourceFile: URL
 
+    enum Error: Swift.Error {
+        case couldNotFindSwiftc
+        case couldNotParseOutputData
+    }
 
-    // FIXME
-    func invoke(arguments: [String]) -> String {
+    init(sourceFile: URL, swiftcURL: URL? = nil) throws {
+        guard let swiftcURL = swiftcURL ?? SwiftcInvocator._swiftcURL else {
+            throw Error.couldNotFindSwiftc
+        }
+        self.swiftcURL = swiftcURL
+        self.sourceFile = sourceFile
+    }
+
+    func dumpAST() throws -> String {
+        return try invoke(arguments: ["-frontend", "-dump-ast", sourceFile.path])
+    }
+
+    func invoke(arguments: [String]) throws -> String {
 
         let stdoutPipe = Pipe()
         var stdoutData = Data()
@@ -46,11 +63,14 @@ struct SwiftcInvocator {
         stdoutSource.resume()
 
         let process = Process()
-        process.launchPath = SwiftcInvocator._swiftcURL!.path
+        process.launchPath = swiftcURL.path
         process.arguments = arguments
         process.standardOutput = stdoutPipe
         process.launch()
         process.waitUntilExit()
-        return String(data: stdoutData, encoding: .utf8)!
+        guard let result = String(data: stdoutData, encoding: .utf8) else {
+            throw Error.couldNotParseOutputData
+        }
+        return result
     }
 }
