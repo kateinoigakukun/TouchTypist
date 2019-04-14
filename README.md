@@ -29,3 +29,5 @@ swiftc -frontend -dump-ast sourcefile.swift > sourcefile.swift.ast
 ### Rewrite Xcode projects
 
 Set User-Defined build setting, `SWIFT_EXEC` with `./.build/debug/stir-xcode-wrapper`.
+
+![](./resources/configuration.gif)
