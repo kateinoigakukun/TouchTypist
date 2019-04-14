@@ -12,7 +12,7 @@ import SwiftSyntax
 
 class TypeAnnotationWriterTests: XCTestCase {
 
-    func testDetectSubstitution() {
+    func testSubstitution() {
         let file = createSourceFile(from:
             """
             let value = 1
@@ -55,7 +55,7 @@ class TypeAnnotationWriterTests: XCTestCase {
 //        )
 //    }
 
-    func testDetectClosure() {
+    func testClosure() {
         let file = createSourceFile(from:
             """
             [1, 2, 3].map { (i) in
@@ -72,6 +72,28 @@ class TypeAnnotationWriterTests: XCTestCase {
             """
             [1, 2, 3].map { (i: Int) -> (String, Int) in
                 return (i.description, i)
+            }
+            """
+        )
+    }
+
+    func testNonTupleClosureArguments() {
+        let file = createSourceFile(from:
+            """
+            [1, 2, 3].map { i in
+                return i.description
+            }
+            """
+        )
+
+        let syntax = try! SyntaxTreeParser.parse(file)
+        let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
+        let result = TypeAnnotationWriter(node: node).visit(syntax)
+        XCTAssertEqual(
+            result.description,
+            """
+            [1, 2, 3].map { (i: Int) -> String in
+                return i.description
             }
             """
         )
