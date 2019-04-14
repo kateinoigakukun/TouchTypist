@@ -28,7 +28,8 @@ final class ClosureExprWriter {
         let typedParameterList = parameterList.enumerated().map { element -> FunctionParameterSyntax in
             let (index, param) = element
             let newType = self.addTypeAnnotation(to: param, parameterListNode: parameterListNode)
-            if index == parameterList.count-1 {
+            let isLast = index == parameterList.count-1
+            if isLast {
                 return newType
             } else {
                 return newType.withTrailingComma(SyntaxFactory.makeCommaToken(trailingTrivia: .spaces(1)))
@@ -117,16 +118,12 @@ final class ClosureExprWriter {
             return parameter
         }
 
-        guard let foundNode = node.children.first(where: { $0.value == parameterName.text }) else {
+        guard let foundNode = node.children.first(where: { $0.value == parameterName.text }),
+            let typeName = foundNode.type else {
             return parameter
         }
-        guard let typeName = foundNode.type else {
-            return parameter
-        }
-        var parameter = parameter
         let colon = SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1))
-        parameter = parameter.withColon(colon)
         let type = SyntaxFactory.makeTypeIdentifier(typeName)
-        return parameter.withType(type)
+        return parameter.withColon(colon).withType(type)
     }
 }
