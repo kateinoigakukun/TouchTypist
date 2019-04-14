@@ -77,7 +77,29 @@ class TypeAnnotationWriterTests: XCTestCase {
         )
     }
 
-    func testNonTupleClosureArguments() {
+    func testClosureMultiArguments() {
+        let file = createSourceFile(from:
+            """
+            [1, 2, 3].reduce([]) { result, i in
+                return result + [i]
+            }
+            """
+        )
+
+        let syntax = try! SyntaxTreeParser.parse(file)
+        let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
+        let result = TypeAnnotationWriter(node: node).visit(syntax)
+        XCTAssertEqual(
+            result.description,
+            """
+            [1, 2, 3].reduce([]) { (result: [Int], i: Int) -> [Int] in
+                return result + [i]
+            }
+            """
+        )
+    }
+
+    func testClosureNonTupleArguments() {
         let file = createSourceFile(from:
             """
             [1, 2, 3].map { i in

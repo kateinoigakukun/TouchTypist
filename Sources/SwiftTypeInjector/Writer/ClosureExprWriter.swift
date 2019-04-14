@@ -31,7 +31,7 @@ final class ClosureExprWriter {
             if index == parameterList.count-1 {
                 return newType
             } else {
-                return newType.withTrailingComma(SyntaxFactory.makeCommaToken())
+                return newType.withTrailingComma(SyntaxFactory.makeCommaToken(trailingTrivia: .spaces(1)))
             }
         }
         let newParameterList = SyntaxFactory.makeFunctionParameterList(typedParameterList)
