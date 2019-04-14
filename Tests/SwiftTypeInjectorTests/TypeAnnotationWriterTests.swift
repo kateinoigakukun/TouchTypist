@@ -18,6 +18,7 @@ class TypeAnnotationWriterTests: XCTestCase {
             let value = 1
             let stringValue = value.description
             let array = [1,2,3].map { $0.description }
+            let `default` = "default"
             """
         )
 
@@ -31,6 +32,7 @@ class TypeAnnotationWriterTests: XCTestCase {
             let value: Int = 1
             let stringValue: String = value.description
             let array: [String] = [1,2,3].map { $0.description }
+            let `default`: String = "default"
             """
         )
     }

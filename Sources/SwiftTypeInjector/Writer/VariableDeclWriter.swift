@@ -22,7 +22,14 @@ final class VariableDeclWriter {
                 colon: SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)),
                 type: SyntaxFactory.makeTypeIdentifier(bindingTypeName, trailingTrivia: .spaces(1))
             )
-            let identifier: TokenSyntax = patternIdentifier.identifier.withTrailingTrivia(.zero)
+            let trailingTriviaPieces: [TriviaPiece] = patternIdentifier.identifier.trailingTrivia?.compactMap {
+                switch $0 {
+                case .spaces: return nil
+                default: return $0
+                }
+            } ?? []
+            let trailingTrivia = Trivia(pieces: trailingTriviaPieces)
+            let identifier: TokenSyntax = patternIdentifier.identifier.withTrailingTrivia(trailingTrivia)
             let newBinding: PatternBindingSyntax = binding.withTypeAnnotation(typeAnnotation)
                 .withPattern(patternIdentifier.withIdentifier(identifier))
             return bindings.replacing(childAt: offset, with: newBinding)
