@@ -8,6 +8,9 @@ let package = Package(
             name: "SwiftTypeInjector",
             targets: ["SwiftTypeInjector"]),
         .executable(
+            name: "stir",
+            targets: ["stir"]),
+        .executable(
             name: "benchmark",
             targets: ["Benchmark"])
     ],
@@ -16,6 +19,9 @@ let package = Package(
         .package(url: "https://github.com/thoughtbot/Curry.git", from: "4.0.2"),
     ],
     targets: [
+        .target(
+            name: "stir",
+            dependencies: ["SwiftTypeInjector"]),
         .target(
             name: "Benchmark",
             dependencies: ["TypeCheckedAST"]),

@@ -5,6 +5,8 @@ public final class TypeCheckedASTParser {
         case notSwiftSourceFile
     }
 
+    public init() {}
+
     public func parse(swiftSourceFile: URL, swiftcURL: URL? = nil) throws -> DumpedNode {
         guard swiftSourceFile.pathExtension == "swift" else {
             throw Error.notSwiftSourceFile
