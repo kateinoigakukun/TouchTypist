@@ -40,16 +40,25 @@ final class InjectionPointDetector: SyntaxRewriter {
             guard let patternIdentifier = binding.pattern as? IdentifierPatternSyntax else {
                 return bindings
             }
-            let node = self.node
-            let request = Request.cursorInfo(
-                file: filePath.path,
-                offset: Int64(binding.position.utf8Offset),
-                arguments: [filePath.path]
-            )
-            let result = try! request.send()
-            guard let bindingName = result["key.name"] as? String else { fatalError() }
-            guard let bindingTypeName = result["key.typename"] as? String else { fatalError() }
-            assert(bindingName == patternIdentifier.identifier.text)
+            let position = binding.position
+            let point = Range.Point(fileName: "", line: position.line, column: position.column)
+            guard let foundNode = self.node.find(point: point) else { return bindings }
+            guard foundNode.name == "pattern_binding_decl" else { return bindings }
+            guard let patternNamed = foundNode.children.first(where: { $0.name == "pattern_named" }) else {
+                return bindings
+            }
+            guard let bindingTypeName = patternNamed.type,
+                patternNamed.value == patternIdentifier.identifier.text else { return bindings }
+
+//            let request = Request.cursorInfo(
+//                file: filePath.path,
+//                offset: Int64(binding.position.utf8Offset),
+//                arguments: [filePath.path]
+//            )
+//            let result = try! request.send()
+//            guard let bindingName = result["key.name"] as? String else { fatalError() }
+//            guard let bindingTypeName = result["key.typename"] as? String else { fatalError() }
+//            assert(bindingName == patternIdentifier.identifier.text)
             let typeAnnotation = SyntaxFactory.makeTypeAnnotation(
                 colon: SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1)),
                 type: SyntaxFactory.makeTypeIdentifier(bindingTypeName, trailingTrivia: .spaces(1))

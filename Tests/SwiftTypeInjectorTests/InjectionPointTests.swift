@@ -12,12 +12,18 @@ import SwiftSyntax
 
 class InjectionPointTests: XCTestCase {
 
+    func astNode(for url: URL) -> RawNode {
+        let rawString = SwiftcInvocator().invoke(arguments: ["-frontend", "-dump-ast", url.absoluteString])
+        return try! parseNode().parse(.root(from: rawString)).get().0
+    }
+
     func testDetectSubstitution() {
         let file = createSourceFile(from:
             """
             let value = 1
             """
         )
+
         let astContent = """
         (source_file "testDetectSubstitution.swift"
         (top_level_code_decl range=[testDetectSubstitution.swift:1:1 - line:1:13]

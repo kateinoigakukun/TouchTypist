@@ -45,6 +45,15 @@ public struct RawNode {
         }.first
     }
 
+    public var type: String? {
+        return attributes.lazy.compactMap {
+            switch $0 {
+            case .type(let type): return type
+            default: return nil
+            }
+        }.first
+    }
+
     public func find(point: Range.Point) -> RawNode? {
         func findChildren() -> RawNode? {
             guard !children.isEmpty else { return nil }
@@ -111,6 +120,12 @@ public struct Range: CustomStringConvertible {
         public let fileName: String
         public let line: Int
         public let column: Int
+
+        public init(fileName: String, line: Int, column: Int) {
+            self.fileName = fileName
+            self.line = line
+            self.column = column
+        }
 
         public var description: String {
             return "\(fileName):\(line):\(column)"
