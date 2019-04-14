@@ -46,7 +46,7 @@ struct SwiftcInvocator {
         stdoutSource.resume()
 
         let process = Process()
-        process.launchPath = SwiftcInvocator._swiftcURL!.absoluteString
+        process.launchPath = SwiftcInvocator._swiftcURL!.path
         process.arguments = arguments
         process.standardOutput = stdoutPipe
         process.launch()

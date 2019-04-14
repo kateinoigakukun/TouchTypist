@@ -13,7 +13,7 @@ import SwiftSyntax
 class InjectionPointTests: XCTestCase {
 
     func astNode(for url: URL) -> RawNode {
-        let rawString = SwiftcInvocator().invoke(arguments: ["-frontend", "-dump-ast", url.absoluteString])
+        let rawString = SwiftcInvocator().invoke(arguments: ["-frontend", "-dump-ast", url.path])
         return try! parseNode().parse(.root(from: rawString)).get().0
     }
 
@@ -24,24 +24,9 @@ class InjectionPointTests: XCTestCase {
             """
         )
 
-        let astContent = """
-        (source_file "testDetectSubstitution.swift"
-        (top_level_code_decl range=[testDetectSubstitution.swift:1:1 - line:1:13]
-            (brace_stmt implicit range=[testDetectSubstitution.swift:1:1 - line:1:13]
-            (pattern_binding_decl range=[testDetectSubstitution.swift:1:1 - line:1:13]
-                (pattern_named type='Int' 'value')
-                (call_expr implicit type='Int' location=testDetectSubstitution.swift:1:13 range=[testDetectSubstitution.swift:1:13 - line:1:13] nothrow arg_labels=_builtinIntegerLiteral:
-                (constructor_ref_call_expr implicit type='(IntLiteral) -> Int' location=testDetectSubstitution.swift:1:13 range=[testDetectSubstitution.swift:1:13 - line:1:13] nothrow
-                    (declref_expr implicit type='(Int.Type) -> (IntLiteral) -> Int' location=testDetectSubstitution.swift:1:13 range=[testDetectSubstitution.swift:1:13 - line:1:13] decl=Swift.(file).Int.init(_builtinIntegerLiteral:) function_ref=single)
-                    (type_expr implicit type='Int.Type' location=testDetectSubstitution.swift:1:13 range=[testDetectSubstitution.swift:1:13 - line:1:13] typerepr='Int'))
-                (tuple_expr implicit type='(_builtinIntegerLiteral: Builtin.IntLiteral)' location=testDetectSubstitution.swift:1:13 range=[testDetectSubstitution.swift:1:13 - line:1:13] names=_builtinIntegerLiteral
-                    (integer_literal_expr type='Builtin.IntLiteral' location=testDetectSubstitution.swift:1:13 range=[testDetectSubstitution.swift:1:13 - line:1:13] value=1))))
-        ))
-        (var_decl range=[testDetectSubstitution.swift:1:5 - line:1:5] "value" type='Int' interface type='Int' access=internal let readImpl=stored immutable))
-        """
         let syntax = try! SyntaxTreeParser.parse(file)
-        let (node, tail) = try! parseNode().parse(.root(from: astContent)).get()
-        let result = InjectionPointDetector(filePath: file, node: node).visit(syntax)
+        let dumpedNode = astNode(for: file)
+        let result = InjectionPointDetector(filePath: file, node: dumpedNode).visit(syntax)
 
         XCTAssertEqual(
             result.description,
