@@ -81,13 +81,16 @@ public struct SwiftcInvocator {
         var argument: String { return arguments[index] }
         while index != arguments.endIndex {
             switch argument {
-            case "-incremental",
+            case "-c",
+                 "-incremental",
                  "-enable-batch-mode",
                  "-emit-dependencies",
                  "-emit-module",
                  "-emit-objc-header",
                  "-parseable-output",
-                 "-serialize-diagnostics":
+                 "-serialize-diagnostics",
+                 "-Xfrontend",
+                 "-serialize-debugging-options":
                 index = arguments.index(after: index)
             case "-emit-module-path",
                  "-emit-objc-header-path",
@@ -95,14 +98,15 @@ public struct SwiftcInvocator {
                  "-index-store-path":
                 index = arguments.index(after: index)
                 index = arguments.index(after: index)
-            case "-c":
-                stripped.append("-dump-ast")
-                index = arguments.index(after: index)
             default:
+                if argument.hasPrefix("-j") {
+                    index = arguments.index(after: index)
+                    continue
+                }
                 stripped.append(argument)
                 index = arguments.index(after: index)
             }
         }
-        return stripped
+        return ["-frontend", "-dump-ast"] + stripped
     }
 }

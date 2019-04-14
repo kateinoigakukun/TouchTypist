@@ -23,7 +23,7 @@ public final class TypeCheckedASTParser {
     }
 
     public func parse(content: String, swiftcURL: URL? = nil) throws -> [DumpedNode] {
-        let (nodeList, _) = try many1(parseNode()).parse(.root(from: content)).get()
+        let (nodeList, _) = try many1(skipSpaces() *> parseNode() <* skipSpaces()).parse(.root(from: content)).get()
         return nodeList
     }
 }
