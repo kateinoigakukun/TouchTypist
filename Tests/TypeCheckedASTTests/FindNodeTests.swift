@@ -22,19 +22,19 @@ class FindNodeTests: XCTestCase {
     }
 
     func testFindInPosition() {
-        let node = RawNode(
+        let node = DumpedNode(
             name: "1",
             location: location(1, 1),
             children: [
-                RawNode(
+                DumpedNode(
                     name: "2",
                     location: location(1, 2)
                 ),
-                RawNode(
+                DumpedNode(
                     name: "3",
                     location: location(2, 2)
                 ),
-                RawNode(
+                DumpedNode(
                     name: "4",
                     location: location(3, 2)
                 ),
@@ -49,28 +49,28 @@ class FindNodeTests: XCTestCase {
     }
 
     func testFindInRange() {
-        let node = RawNode(
+        let node = DumpedNode(
             name: "1",
             range: range((1, 1), (4, 1)),
             children: [
-                RawNode(
+                DumpedNode(
                     name: "2",
                     range: range((1, 1), (2, 3)),
                     children: [
-                        RawNode(
+                        DumpedNode(
                             name: "3",
                             location: location(2, 2)
                         )
                     ]
                 ),
-                RawNode(
+                DumpedNode(
                     name: "4",
                     range: range((2, 3), (3, 1))
                 ),
-                RawNode(
+                DumpedNode(
                     name: "5",
                     children: [
-                        RawNode(
+                        DumpedNode(
                             name: "6",
                             location: location(3, 5)
                         )
@@ -100,12 +100,12 @@ class FindNodeTests: XCTestCase {
     }
 }
 
-extension RawNode {
+extension DumpedNode {
 
     init(name: String,
          range: Range? = nil,
          location: Range.Point? = nil,
-         children: [RawNode] = []) {
+         children: [DumpedNode] = []) {
         var attributes = [Attribute]()
         if let range = range {
             attributes.append(.range(range))

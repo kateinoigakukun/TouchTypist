@@ -68,7 +68,7 @@ class ParseNodeTests: XCTestCase {
             start: Range.Point(fileName: "foo.swift", line: 1, column: 1),
             end: Range.Point(fileName: "line", line: 3, column: 1)
         )
-        let child = RawNode(
+        let child = DumpedNode(
             name: "top_level_code_decl",
             nodeContents: [.attribute(.range(range))]
         )
@@ -116,7 +116,7 @@ class ParseNodeTests: XCTestCase {
             end: Range.Point(fileName: "line", line: 3, column: 1)
         )
         let attribute = Attribute.range(range)
-        let expectedNode = RawNode(
+        let expectedNode = DumpedNode(
             name: "top_level_code_decl",
             nodeContents: [.attribute(attribute)]
         )

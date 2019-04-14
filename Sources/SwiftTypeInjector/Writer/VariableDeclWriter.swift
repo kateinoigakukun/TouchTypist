@@ -2,7 +2,7 @@ import SwiftSyntax
 import TypeCheckedAST
 
 final class VariableDeclWriter {
-    func write(_ syntax: VariableDeclSyntax, node: RawNode) -> VariableDeclSyntax {
+    func write(_ syntax: VariableDeclSyntax, node: DumpedNode) -> VariableDeclSyntax {
         let newBindings = syntax.bindings.enumerated().reduce(syntax.bindings) {  bindings, element in
 
             let (offset, binding) = element

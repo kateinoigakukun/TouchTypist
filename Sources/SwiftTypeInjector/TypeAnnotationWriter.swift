@@ -4,8 +4,8 @@ import SwiftSyntax
 import SourceKittenFramework
 
 final class TypeAnnotationWriter: SyntaxRewriter {
-    let node: RawNode
-    init(node: RawNode) {
+    let node: DumpedNode
+    init(node: DumpedNode) {
         self.node = node
     }
 

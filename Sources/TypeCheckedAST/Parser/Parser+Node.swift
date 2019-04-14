@@ -7,8 +7,8 @@
 
 import Curry
 
-func parseNode() -> Parser<RawNode> {
-    let node = (curry(RawNode.init)
+func parseNode() -> Parser<DumpedNode> {
+    let node = (curry(DumpedNode.init)
         <^> (String.init <^> keyword())
         <*> many(
             skipSpaces() *> parseNodeContent() <* skipSpaces()

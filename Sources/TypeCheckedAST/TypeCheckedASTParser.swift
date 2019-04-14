@@ -5,7 +5,7 @@ public final class TypeCheckedASTParser {
         case notSwiftSourceFile
     }
 
-    public func parse(swiftSourceFile: URL, swiftcURL: URL? = nil) throws -> RawNode {
+    public func parse(swiftSourceFile: URL, swiftcURL: URL? = nil) throws -> DumpedNode {
         guard swiftSourceFile.pathExtension == "swift" else {
             throw Error.notSwiftSourceFile
         }
@@ -15,7 +15,7 @@ public final class TypeCheckedASTParser {
         return node
     }
 
-    public func parse(astFile: URL, swiftcURL: URL? = nil) throws -> [RawNode] {
+    public func parse(astFile: URL, swiftcURL: URL? = nil) throws -> [DumpedNode] {
         let content = try String(contentsOf: astFile)
         let (nodeList, _) = try many1(parseNode()).parse(.root(from: content)).get()
         return nodeList

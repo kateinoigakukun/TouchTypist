@@ -1,5 +1,5 @@
 
-public struct RawNode {
+public struct DumpedNode {
     public let name: String
     public let nodeContents: [NodeContent]
     public var attributes: [Attribute] {
@@ -10,7 +10,7 @@ public struct RawNode {
             }
         }
     }
-    public var children: [RawNode] {
+    public var children: [DumpedNode] {
         return nodeContents.compactMap {
             switch $0 {
             case .node(let node): return node
@@ -54,8 +54,8 @@ public struct RawNode {
         }.first
     }
 
-    public func find(point: Range.Point) -> RawNode? {
-        func findChildren() -> RawNode? {
+    public func find(point: Range.Point) -> DumpedNode? {
+        func findChildren() -> DumpedNode? {
             guard !children.isEmpty else { return nil }
             let hitNodes = children.compactMap {
                 $0.find(point: point)
@@ -161,7 +161,7 @@ public struct Decl {
 
 public enum NodeContent: Equatable {
     case attribute(Attribute)
-    case node(RawNode)
+    case node(DumpedNode)
     case value(String)
     case unknown(String)
 }
@@ -174,7 +174,7 @@ public enum Attribute {
     case __unknownMark(String)
 }
 
-extension RawNode: Equatable {}
+extension DumpedNode: Equatable {}
 extension Range: Equatable {}
 extension Range.Point: Equatable {}
 extension Range.Point: Comparable {

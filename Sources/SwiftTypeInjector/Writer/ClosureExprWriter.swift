@@ -2,7 +2,7 @@ import SwiftSyntax
 import TypeCheckedAST
 
 final class ClosureExprWriter {
-    func write(_ syntax: ClosureExprSyntax, node: RawNode) -> ClosureExprSyntax {
+    func write(_ syntax: ClosureExprSyntax, node: DumpedNode) -> ClosureExprSyntax {
         guard let input = syntax.signature?.input as? ParameterClauseSyntax else {
             return syntax
         }
