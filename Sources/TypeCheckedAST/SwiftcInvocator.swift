@@ -1,6 +1,6 @@
 import Foundation
 
-struct SwiftcInvocator {
+public struct SwiftcInvocator {
     private static func getSearchPaths() -> [URL] {
         let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
         let pathEnvVar = ProcessInfo.processInfo.environment["PATH"] ?? ""
@@ -26,7 +26,7 @@ struct SwiftcInvocator {
         return nil
     }
 
-    private static func locateSwiftc() -> URL? {
+    public static func locateSwiftc() -> URL? {
         return lookupExecutablePath(filename: "swiftc")
     }
 
