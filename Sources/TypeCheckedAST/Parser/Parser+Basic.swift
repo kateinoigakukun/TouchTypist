@@ -97,6 +97,9 @@ func keyword() -> Parser<String> {
 }
 
 func stringLiteral() -> Parser<String> {
-    let validString = satisfyString(predicate: { $0 != "\"" })
-    return char("\"") *> validString <* char("\"")
+    let quote: [Character] = ["\"", "'"]
+    return choice(quote.map { q in
+        let validString = satisfyString(predicate: { $0 != q })
+        return char(q) *> validString <* char(q)
+    })
 }

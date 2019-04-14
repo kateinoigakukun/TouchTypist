@@ -31,8 +31,8 @@ func parseNodeContent() -> Parser<NodeContent> {
 func parseUnknownValue() -> Parser<NodeContent> {
     return choice(
         [
-            const(.unknown) <^> unknownValue(),
-            const(.unknown) <^> unknownChar(),
+            NodeContent.unknown <^> unknownValue(),
+            NodeContent.unknown <^> (String.init <^> unknownChar()),
         ]
     )
 }

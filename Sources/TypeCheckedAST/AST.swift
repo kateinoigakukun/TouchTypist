@@ -89,16 +89,24 @@ public struct RawNode {
             }
         }
         let locationsString = locations.map { "location=\($0)" }.joined(separator: " ")
+        let ranges = attributes.compactMap { attr -> Range? in
+            switch attr {
+            case .range(let range): return range
+            default: return nil
+            }
+        }
+        let rangesString = ranges.map { "range=\($0)" }.joined(separator: " ")
         let indent = Array(repeating: " ", count: depth).joined()
+        let valueString = value.map { " \($0)" } ?? ""
         return """
-        \(indent)(\(name) \(typeNamesString) \(locationsString)
+        \(indent)(\(name)\(valueString) \(typeNamesString) \(locationsString) \(rangesString)
         \(children.map { $0._dump(depth: depth + 2) }.joined(separator: "\n"))
         \(indent))
         """
     }
 }
 
-public struct Range {
+public struct Range: CustomStringConvertible {
     public struct Point: CustomStringConvertible {
         public let fileName: String
         public let line: Int
@@ -110,6 +118,10 @@ public struct Range {
     }
     public let start: Point
     public let end: Point
+
+    public var description: String {
+        return "[\(start) - \(end)]"
+    }
 
     func contains(_ point: Point) -> Bool {
         switch (point.line, point.column) {
@@ -136,7 +148,7 @@ public enum NodeContent: Equatable {
     case attribute(Attribute)
     case node(RawNode)
     case value(String)
-    case unknown
+    case unknown(String)
 }
 
 public enum Attribute {

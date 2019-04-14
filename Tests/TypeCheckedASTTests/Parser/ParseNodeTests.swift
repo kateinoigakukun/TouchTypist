@@ -139,4 +139,11 @@ class ParseNodeTests: XCTestCase {
             ]
         )
     }
+
+    func testSingleQuotedValue() throws {
+        let content = "'value'"
+        let (value, tail) = try parseNodeValue().parse(content)
+        XCTAssertEqual(value, "value")
+        XCTAssertEqual(tail, "")
+    }
 }

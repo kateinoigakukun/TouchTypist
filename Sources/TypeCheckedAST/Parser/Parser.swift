@@ -14,7 +14,7 @@ struct ParserInput {
     init(previous: ParserInput, index: String.Index, debugContext: DebugContext? = nil) {
         self.text = previous.text
         self.startIndex = index
-        self.debugContext = previous.debugContext ?? debugContext
+        self.debugContext = debugContext ?? previous.debugContext
     }
 
     static func root(from text: String) -> ParserInput {

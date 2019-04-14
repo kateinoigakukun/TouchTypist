@@ -34,7 +34,7 @@ class InjectionPointTests: XCTestCase {
         (var_decl range=[testDetectSubstitution.swift:1:5 - line:1:5] "value" type='Int' interface type='Int' access=internal let readImpl=stored immutable))
         """
         let syntax = try! SyntaxTreeParser.parse(file)
-        let (node, _) = try! parseNode().parse(.root(from: astContent)).get()
+        let (node, tail) = try! parseNode().parse(.root(from: astContent)).get()
         let result = InjectionPointDetector(filePath: file, node: node).visit(syntax)
 
         XCTAssertEqual(
