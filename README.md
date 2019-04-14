@@ -1,12 +1,22 @@
 # SwiftTypeInjector
 
+## Installation
+
+TODO
+
+## Build
+
+```bash
+swift build
+```
+
 ## Usage
 
 ### Rewrite single file
 
 ```bash
 swiftc -frontend -dump-ast sourcefile.swift > sourcefile.swift.ast
-stir rewrite sourcefile.swift.ast
+./.build/debug/stir rewrite sourcefile.swift.ast
 ```
 
 ```diff
@@ -18,4 +28,4 @@ stir rewrite sourcefile.swift.ast
 
 ### Rewrite Xcode projects
 
-Set User-Defined build setting, `SWIFT_EXEC` with `stir-xcode-wrapper`.
+Set User-Defined build setting, `SWIFT_EXEC` with `./.build/debug/stir-xcode-wrapper`.
