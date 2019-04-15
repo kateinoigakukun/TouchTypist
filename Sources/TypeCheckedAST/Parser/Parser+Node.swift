@@ -26,6 +26,11 @@ func parseNodeContent() -> Parser<NodeContent> {
         <|> (NodeContent.attribute <^> parseAttribute())
         <|> parseUnknownValue()
         <|> (NodeContent.node <^> parseNode())
+        <|> fallback()
+}
+
+func fallback() -> Parser<NodeContent> {
+    return NodeContent.unknown <^> (char("(") *> unknownMark() <* char(")"))
 }
 
 func parseUnknownValue() -> Parser<NodeContent> {

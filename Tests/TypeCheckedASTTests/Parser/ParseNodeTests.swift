@@ -10,6 +10,13 @@ import XCTest
 import Curry
 
 class ParseNodeTests: XCTestCase {
+    
+    func testParseSubstitution() throws {
+        let content = "(substitution Self -> ([URL]))"
+        let (node, tail) = try parseNode().parse(content)
+        XCTAssertEqual(node.name, "substitution")
+        XCTAssertEqual(tail, "")
+    }
 
     func testParseAttributeIncludingParen() throws {
         let (value, tail) = try unknownValue().parse("_getEmbeddedNSError()")
