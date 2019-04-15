@@ -2,17 +2,17 @@
 import PackageDescription
 
 let package = Package(
-    name: "SwiftTypeInjector",
+    name: "TouchTypist",
     products: [
         .library(
             name: "SwiftTypeInjector",
             targets: ["SwiftTypeInjector"]),
         .executable(
-            name: "stir",
-            targets: ["stir"]),
+            name: "touchtypist",
+            targets: ["touchtypist"]),
         .executable(
-            name: "stir-xcode-wrapper",
-            targets: ["stir-xcode-wrapper"]),
+            name: "touchtypist-xcode-wrapper",
+            targets: ["touchtypist-xcode-wrapper"]),
         .executable(
             name: "xcode-ast-dump-wrapper",
             targets: ["xcode-ast-dump-wrapper"]),
@@ -23,10 +23,10 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "stir",
+            name: "touchtypist",
             dependencies: ["SwiftTypeInjector"]),
         .target(
-            name: "stir-xcode-wrapper",
+            name: "touchtypist-xcode-wrapper",
             dependencies: ["SwiftTypeInjector"]),
         .target(
             name: "xcode-ast-dump-wrapper",
