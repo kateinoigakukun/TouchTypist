@@ -5,7 +5,7 @@ import Foundation
 func help() {
     print(
         """
-        Usage: stir subcommand
+        Usage: touchtypist subcommand
         SUBCOMMANDS:
             rewrite <AST file>  Rewrite source files
         """

@@ -9,8 +9,8 @@ class XcodeCommand {
             exit(1)
         }
         var arguments = arguments
-        guard let dumpPath = arguments.first(where: { $0.contains("-DSTIR_DUMP_PATH=") })?.split(separator: "=")[1] else {
-            print("STIR_DUMP_PATH not found")
+        guard let dumpPath = arguments.first(where: { $0.contains("-DTT_DUMP_PATH=") })?.split(separator: "=")[1] else {
+            print("Please set TT_DUMP_PATH")
             exit(1)
         }
         arguments.removeFirst()
