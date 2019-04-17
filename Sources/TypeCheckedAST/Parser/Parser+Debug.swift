@@ -31,12 +31,16 @@ func debugPrint(_ id: String = #function) -> Parser<Void> {
 }
 
 func trackLatestDebugMessage(_ id: String = #function) -> Parser<Void> {
+    #if DEBUG
     return Parser {
         var debugContext = $0.debugContext ?? DebugContext()
         debugContext.latestDebugMessage = "- [\(id)]: \($0.current)"
         let input = ParserInput(previous: $0, index: $0.startIndex, debugContext: debugContext)
         return .success(((), input))
     }
+    #else
+    return .pure(())
+    #endif
 }
 
 struct DebugPrintIfThrowError: ParserError {
