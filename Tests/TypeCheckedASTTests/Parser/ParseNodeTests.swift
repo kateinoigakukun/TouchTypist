@@ -10,6 +10,13 @@ import XCTest
 import Curry
 
 class ParseNodeTests: XCTestCase {
+
+    func testParseFunctionType() throws {
+        let content = "((Input) -> Void)"
+        let (_, tail) = try unknownValue().parse(content)
+        XCTAssertEqual(tail, "")
+    }
+
     
     func testParseSubstitution() throws {
         let content = "(substitution Self -> ([URL]))"

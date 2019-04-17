@@ -24,8 +24,8 @@ func parseNodeValue() -> Parser<String> {
 func parseNodeContent() -> Parser<NodeContent> {
     return (NodeContent.value <^> parseNodeValue())
         <|> (NodeContent.attribute <^> parseAttribute())
-        <|> parseUnknownValue()
         <|> (NodeContent.node <^> parseNode())
+        <|> parseUnknownValue()
         <|> fallback()
 }
 
@@ -74,7 +74,12 @@ func parseBox(left: Character, right: Character) -> Parser<String> {
         return ![left, right].contains($0) && $0 != "\n"
     })
     let notEmpty = Parser<Void> { input in
-        return .failure(.init(original: BoxParsingError.breakParsingContent(input)))
+        if input.startIndex == input.text.endIndex
+            || input.text[input.startIndex] == right {
+            return .failure(.init(original: BoxParsingError.breakParsingContent(input)))
+        } else {
+            return .success(((), input))
+        }
     }
     let content = { $0.joined() } <^> many(notEmpty *> (parseBox(left: left, right: right) <|> contentText))
     return curry({ String($0) + $1 + String($2) }) <^> char(left) <*> content <*> char(right)
@@ -84,7 +89,8 @@ func unknownValue() -> Parser<String> {
     let boxParen: [(Character, Character)] = [
         ("(", ")")//, ("[", "]"), ("<", ">")
     ]
-    let chars = boxParen.flatMap { [$0.0, $0.1] } + [Character("\n")]
+    let chars = boxParen.flatMap { [$0.0, $0.1] }
+        + [Character("\n"), Character(" ")]
     let text = satisfyString(predicate: { !chars.contains($0) })
     let box = choice(boxParen.map { parseBox(left: $0.0, right: $0.1) })
     return curry({ $0 + $1 + $2 })
