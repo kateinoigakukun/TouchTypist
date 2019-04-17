@@ -98,8 +98,28 @@ func keyword() -> Parser<String> {
 
 func stringLiteral() -> Parser<String> {
     let quote: [Character] = ["\"", "'"]
-    return choice(quote.map { q in
-        let validString = satisfyString(predicate: { $0 != q })
-        return char(q) *> validString <* char(q)
+    let textParsers = quote.map { q -> (Character, Parser<String>) in
+        let text = Parser<String> { input in
+            var index = input.startIndex
+            var char: Character { return input.text[index] }
+            var nextChar: Character {
+                let nextIndex = input.text.index(after: index)
+                return input.text[nextIndex]
+            }
+            while index != input.text.endIndex {
+                if char == q { break }
+                if char == "\\" && nextChar == q {
+                    index = input.text.index(after: index)
+                }
+                index = input.text.index(after: index)
+            }
+            let result = String(input.text[input.startIndex..<index])
+            let newInput = ParserInput(previous: input, index: index)
+            return .success((result, newInput))
+        }
+        return (q, text)
+    }
+    return choice(textParsers.map { (q, parser) in
+        return char(q) *> parser <* char(q)
     })
 }

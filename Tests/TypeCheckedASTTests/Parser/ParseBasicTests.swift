@@ -31,6 +31,20 @@ class ParseBasicTests: XCTestCase {
         XCTAssertThrowsError(try p.parse(content))
     }
 
+    func testParseStringLiteral() throws {
+        let (text1, tail1) = try stringLiteral().parse("\"xx\"")
+        XCTAssertEqual(text1, "xx")
+        XCTAssertEqual(tail1, "")
+        let (text2, tail2) = try stringLiteral().parse("\"x\\\"x\"")
+        XCTAssertEqual(text2, "x\\\"x")
+        XCTAssertEqual(tail2, "")
+    }
+
+    func testEmptyStringLiteral() throws {
+        let (text3, tail3) = try! stringLiteral().parse("''xx")
+        XCTAssertEqual(text3, "")
+        XCTAssertEqual(tail3, "xx")
+    }
 }
 
 extension Parser {
