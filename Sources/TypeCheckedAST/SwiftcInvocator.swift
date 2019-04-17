@@ -107,6 +107,6 @@ public struct SwiftcInvocator {
                 index = arguments.index(after: index)
             }
         }
-        return ["-frontend", "-dump-ast"] + stripped
+        return ["-dump-ast", "-suppress-warnings"] + stripped
     }
 }
