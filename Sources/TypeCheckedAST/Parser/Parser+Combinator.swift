@@ -61,8 +61,8 @@ func satisfy(predicate: @escaping (Character) -> Bool) -> Parser<Character> {
             return .failure(.init(original: SatisfyError.empty(input)))
         }
 
-        let head = input.text[input.startIndex]
-        let index1 = input.text.index(after: input.startIndex)
+        let head = input.text.value[input.startIndex]
+        let index1 = input.text.value.index(after: input.startIndex)
         let newInput = ParserInput(previous: input, index: index1)
         guard predicate(head) else {
             return .failure(.init(original: SatisfyError.invalid(head: head, input: input)))

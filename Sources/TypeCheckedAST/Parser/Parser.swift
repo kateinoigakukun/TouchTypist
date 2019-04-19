@@ -6,8 +6,23 @@
 //
 
 
+class Box<T> {
+    let value: T
+    init(_ value: T) {
+        self.value = value
+    }
+}
+
+extension Box where T == String {
+    var endIndex: String.Index {
+        return value.endIndex
+    }
+    subscript(i: String.Index) -> Character {
+        return value[i]
+    }
+}
 struct ParserInput {
-    let text: String
+    let text: Box<String>
     let startIndex: String.Index
     let debugContext: DebugContext?
 
@@ -22,13 +37,13 @@ struct ParserInput {
     }
 
     fileprivate init(text: String, startIndex: String.Index) {
-        self.text = text
+        self.text = .init(text)
         self.startIndex = startIndex
         self.debugContext = nil
     }
 
     var current: String {
-        return String(text[startIndex...])
+        return String(text.value[startIndex...])
     }
 }
 

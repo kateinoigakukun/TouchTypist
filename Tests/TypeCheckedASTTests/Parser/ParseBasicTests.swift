@@ -51,6 +51,6 @@ extension Parser {
     func parse(_ text: String) throws -> (T, String) {
         let input = ParserInput.root(from: text)
         let (result, tail): (T, ParserInput) = try parse(input).get()
-        return (result, String(tail.text[tail.startIndex...]))
+        return (result, String(tail.text.value[tail.startIndex...]))
     }
 }

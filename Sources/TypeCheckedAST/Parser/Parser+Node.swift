@@ -71,11 +71,11 @@ enum BoxParsingError: ParserError {
 
 func parseBox(left: Character, right: Character) -> Parser<String> {
     let contentText = satisfyString(predicate: {
-        return ![left, right].contains($0) && $0 != "\n"
+        return ![left, right, "\n"].contains($0)
     })
     let notEmpty = Parser<Void> { input in
         if input.startIndex == input.text.endIndex
-            || input.text[input.startIndex] == right {
+            || input.text.value[input.startIndex] == right {
             return .failure(.init(original: BoxParsingError.breakParsingContent(input)))
         } else {
             return .success(((), input))

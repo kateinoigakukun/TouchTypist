@@ -21,6 +21,7 @@ func debugChoice<T>(_ ps: [Parser<T>], function: StaticString = #function) -> Pa
 }
 
 func debugPrint(_ id: String = #function) -> Parser<Void> {
+    #if DEBUG
     return Parser {
         var debugContext = $0.debugContext ?? DebugContext()
         let message = "- [\(id)]: \($0.current)"
@@ -28,6 +29,9 @@ func debugPrint(_ id: String = #function) -> Parser<Void> {
         let input = ParserInput(previous: $0, index: $0.startIndex, debugContext: debugContext)
         return .success(((), input))
     }
+    #else
+    return .pure(())
+    #endif
 }
 
 func trackLatestDebugMessage(_ id: String = #function) -> Parser<Void> {
