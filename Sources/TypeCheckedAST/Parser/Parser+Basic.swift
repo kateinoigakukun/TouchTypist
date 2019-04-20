@@ -14,6 +14,16 @@ func char(_ c: Character) -> Parser<Character> {
     return satisfy(predicate: { $0 == c })
 }
 
+let alphabetCode: [UInt8] = Array(0x41..<0x5A) + Array(0x61..<0x7A)
+func alphabet() -> Parser<Character> {
+    return satisfy(predicate: { c in
+        let scalars = c.unicodeScalars
+        return alphabetCode.contains {
+            scalars.elementsEqual([Unicode.Scalar($0)])
+        }
+    })
+}
+
 func skipSpaces() -> Parser<Void> {
     return void <^> many(char(" "))
 }
@@ -78,7 +88,7 @@ func token(_ string: String, file: StaticString = #file, function: StaticString 
 }
 
 func registeredSymbol() -> [Character] {
-    return ["(", ")", "=", "[", "]", "."]
+    return ["(", ")", ":", "=", "[", "]", ".", "'", "\"", "\n"]
 }
 
 func notEmpty(_ s: String) -> Parser<String> {
@@ -107,6 +117,7 @@ func keyword() -> Parser<String> {
 
 func stringLiteral() -> Parser<String> {
     let quote: [Character] = ["\"", "'"]
+    // TODO: Lazy or separate
     let textParsers = quote.map { q -> (Character, Parser<String>) in
         let text = Parser<String> { input in
             var char: Character

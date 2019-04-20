@@ -12,14 +12,14 @@ struct IndentError: ParserError {
 }
 
 func parseNodeName() -> Parser<String> {
-    return satisfyString(predicate: {
-        ![" ", "\n"].contains($0)
-    }) >>- notEmpty
+    return many1(alphabet() <|> char("_")).map {
+        String($0)
+    }
 }
 
 func parseNode(depth: Int = 0) -> Parser<DumpedNode> {
     let node = (curry(DumpedNode.init)
-        <^> (String.init <^> keyword())
+        <^> parseNodeName()
         <*> many(
             parseNodeContent(depth: depth + 1)
         )
