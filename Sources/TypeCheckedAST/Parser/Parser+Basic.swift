@@ -30,14 +30,13 @@ enum TokenError: ParserError {
     case not(
         String,
         input: ParserInput,
-        text: String.SubSequence,
         file: StaticString, function: StaticString, line: Int
     ),
     outOfBounds(String, input: ParserInput)
 
     var input: ParserInput {
         switch self {
-        case .not(_, let input, _, _, _, _):
+        case .not(_, let input, _, _, _):
             return input
         case .outOfBounds(_, let input):
             return input
@@ -47,22 +46,32 @@ enum TokenError: ParserError {
 
 func token(_ string: String, file: StaticString = #file, function: StaticString = #function, line: Int = #line) -> Parser<String> {
     return Parser { input1 in
-        guard let endIndex = input1.text.value.index(input1.startIndex, offsetBy: string.count, limitedBy: input1.text.endIndex) else {
-            return .failure(.init(original: TokenError.outOfBounds(string, input: input1)))
+        guard
+            let endIndex = input1.text.value.index(
+                input1.startIndex,
+                offsetBy: string.count,
+                limitedBy: input1.text.endIndex
+            )
+            else {
+                return .failure(
+                    .init(
+                        original: TokenError.outOfBounds(
+                            string, input: input1
+                        )
+                    )
+                )
         }
         let prefix = input1.text.value[input1.startIndex..<endIndex]
         guard prefix == string else {
             let error = TokenError.not(
                 string, input: input1,
-                text: input1.text.value[input1.startIndex...],
                 file: file, function: function, line: line
             )
             return .failure(.init(original: error))
         }
-        let newStartIndex = input1.text.value.index(input1.startIndex, offsetBy: string.count)
         let input2 = ParserInput(
             previous: input1,
-            index: newStartIndex
+            index: endIndex
         )
         return .success((String(prefix), input2))
     }
@@ -100,8 +109,13 @@ func stringLiteral() -> Parser<String> {
     let quote: [Character] = ["\"", "'"]
     let textParsers = quote.map { q -> (Character, Parser<String>) in
         let text = Parser<String> { input in
-            var index = input.startIndex
-            var char: Character { return input.text.value[index] }
+            var char: Character
+            var index = input.startIndex {
+                didSet {
+                    char = input.text.value[index]
+                }
+            }
+            char = input.text.value[index]
             var nextChar: Character {
                 let nextIndex = input.text.value.index(after: index)
                 return input.text[nextIndex]
