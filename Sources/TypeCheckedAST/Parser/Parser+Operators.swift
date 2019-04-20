@@ -51,8 +51,16 @@ import Foundation
 func <*> <A, B>(a: Parser<(A) -> B>, b: @autoclosure @escaping () -> Parser<A>) -> Parser<B> {
 //    return a.flatMap { f in b().map { f($0) } }
     return Parser<B> { input in
-        return a.parse(input).flatMap { (f, tailA) in
-            b().parse(tailA).map { (f($0), $1) }
+        switch a.parse(input) {
+        case .success(let (f, tailA)):
+            switch b().parse(tailA) {
+            case .success(let (a, tailB)):
+                return .success((f(a), tailB))
+            case .failure(let error):
+                return .failure(error)
+            }
+        case .failure(let error):
+            return .failure(error)
         }
     }
 }
@@ -73,8 +81,11 @@ func >>- <A, B>(p: Parser<A>, f: @escaping (A) -> Parser<B>) -> Parser<B> {
 func *> <A, B>(a: Parser<A>, b: Parser<B>) -> Parser<B> {
 //    return const(id) <^> a <*> b
     return Parser<B> { input in
-        a.parse(input).flatMap {
-            b.parse($1)
+        switch a.parse(input) {
+        case .success(let (_, tailA)):
+            return b.parse(tailA)
+        case .failure(let error):
+            return .failure(error)
         }
     }
 }
@@ -83,8 +94,16 @@ func *> <A, B>(a: Parser<A>, b: Parser<B>) -> Parser<B> {
 func <* <A, B>(a: Parser<A>, b: Parser<B>) -> Parser<A> {
 //    return const <^> a <*> b
     return Parser<A> { input in
-        return a.parse(input).flatMap { (resultA, tailA) in
-            b.parse(tailA).map { (resultA, $1) }
+        switch a.parse(input) {
+        case .success(let (resultA, tailA)):
+            switch b.parse(tailA) {
+            case .success(let (_, tailB)):
+                return .success((resultA, tailB))
+            case .failure(let error):
+                return .failure(error)
+            }
+        case .failure(let error):
+            return .failure(error)
         }
     }
 }

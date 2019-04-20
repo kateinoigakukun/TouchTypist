@@ -11,6 +11,12 @@ struct IndentError: ParserError {
     let input: ParserInput
 }
 
+func parseNodeName() -> Parser<String> {
+    return satisfyString(predicate: {
+        ![" ", "\n"].contains($0)
+    }) >>- notEmpty
+}
+
 func parseNode(depth: Int = 0) -> Parser<DumpedNode> {
     let node = (curry(DumpedNode.init)
         <^> (String.init <^> keyword())
@@ -18,8 +24,8 @@ func parseNode(depth: Int = 0) -> Parser<DumpedNode> {
             parseNodeContent(depth: depth + 1)
         )
     )
-    let head = Parser<Void> { input in
-        if input.startIndex == input.text.value.startIndex {
+    let indent = Parser<Void> { input in
+        if input.startIndex == input.text.value.startIndex || input.startIndex == input.text.endIndex {
             return .success(((), input))
         }
         var index = input.startIndex
@@ -38,11 +44,11 @@ func parseNode(depth: Int = 0) -> Parser<DumpedNode> {
         }
         return .success(((), ParserInput(previous: input, index: index)))
     }
-    return trackLatestDebugMessage() *> head *> token("(") *> node <* skipSpaces() <* token(")")
+    return trackLatestDebugMessage() *> indent *> char("(") *> node <* skipSpaces() <* char(")")
 }
 
 func parseNodeValue() -> Parser<String> {
-    return (String.init <^> stringLiteral())
+    return stringLiteral()
 }
 
 func parseNodeContent(depth: Int) -> Parser<NodeContent> {

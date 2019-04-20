@@ -47,7 +47,9 @@ struct ParserInput {
     }
 }
 
-protocol ParserError: Error {
+import Foundation
+
+protocol ParserError: LocalizedError {
     var input: ParserInput { get }
 }
 
@@ -63,15 +65,23 @@ struct Parser<T> {
     @inline(__always)
     func map<U>(_ transformer: @escaping (T) -> U) -> Parser<U> {
         return Parser<U> {
-            return self.parse($0).map { (transformer($0), $1) }
+            switch self.parse($0) {
+            case .success(let (result, input2)):
+                return .success((transformer(result), input2))
+            case .failure(let error):
+                return .failure(error)
+            }
         }
     }
 
     @inline(__always)
     func flatMap<U>(_ transformer: @escaping (T) -> Parser<U>) -> Parser<U> {
         return Parser<U> { input1 in
-            self.parse(input1).flatMap {
-                return transformer($0).parse($1)
+            switch self.parse(input1) {
+            case .success(let (result, input2)):
+                return transformer(result).parse(input2)
+            case .failure(let error):
+                return .failure(error)
             }
         }
     }

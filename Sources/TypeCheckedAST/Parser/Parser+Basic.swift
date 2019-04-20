@@ -15,7 +15,7 @@ func char(_ c: Character) -> Parser<Character> {
 }
 
 func skipSpaces() -> Parser<Void> {
-    return void <^> many(char(" ") <|> char("\n"))
+    return void <^> many(char(" "))
 }
 
 func digit() -> Parser<Character> {

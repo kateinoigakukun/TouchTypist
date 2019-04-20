@@ -169,11 +169,6 @@ public struct Range: CustomStringConvertible {
     }
 }
 
-public struct Decl {
-    public let value: String
-    public let substitution: String?
-}
-
 public enum NodeContent: Equatable {
     case attribute(Attribute)
     case node(DumpedNode)
@@ -186,7 +181,6 @@ public enum Attribute {
     case type(String)
     case location(Point)
     case __unknownChar(Character)
-    case __unknownMark(String)
 }
 
 extension DumpedNode: Equatable {}
