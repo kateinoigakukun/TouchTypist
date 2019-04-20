@@ -15,26 +15,28 @@ func parseNode(depth: Int = 0) -> Parser<DumpedNode> {
     let node = (curry(DumpedNode.init)
         <^> (String.init <^> keyword())
         <*> many(
-            parseNodeContent(depth: depth + 1) <* skipSpaces()
+            parseNodeContent(depth: depth + 1)
         )
     )
     let head = Parser<Void> { input in
         if input.startIndex == input.text.value.startIndex {
             return .success(((), input))
         }
-        let beforeIndex = input.text.value.index(before: input.startIndex)
-        let before = input.text.value[beforeIndex]
-        guard before == "\n" else {
-            return .success(((), input))
+        var index = input.startIndex
+        var char: Character { return input.text.value[index] }
+        func success(_ index: String.Index) -> String.Index {
+            return input.text.value.index(after: index)
         }
-        for i in 0..<(depth * 2) {
-            let index = input.text.value.index(input.startIndex, offsetBy: i)
-            let char = input.text[index]
+        guard char == "\n" else { return .success(((), input)) }
+        index = success(index)
+
+        for _ in 0..<(depth * 2) {
             guard char == " " else {
                 return .failure(.init(original: IndentError(input: input)))
             }
+            index = success(index)
         }
-        return .success(((), input))
+        return .success(((), ParserInput(previous: input, index: index)))
     }
     return trackLatestDebugMessage() *> head *> token("(") *> node <* skipSpaces() <* token(")")
 }
@@ -44,7 +46,7 @@ func parseNodeValue() -> Parser<String> {
 }
 
 func parseNodeContent(depth: Int) -> Parser<NodeContent> {
-    return (NodeContent.value <^> parseNodeValue())
+    return (NodeContent.value <^> (skipSpaces() *> parseNodeValue()))
         <|> (NodeContent.attribute <^> (skipSpaces() *> parseAttribute()))
         <|> (NodeContent.node <^> parseNode(depth: depth))
         <|> parseUnknownValue()

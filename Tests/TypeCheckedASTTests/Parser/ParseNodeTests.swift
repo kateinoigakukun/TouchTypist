@@ -73,8 +73,8 @@ class ParseNodeTests: XCTestCase {
     func testParseChildren() throws {
         let content = """
         (source_file "foo.swift"
-            (top_level_code_decl range=[foo.swift:1:1 - line:3:1] )
-            (top_level_code_decl range=[foo.swift:1:1 - line:3:1] ))
+          (top_level_code_decl range=[foo.swift:1:1 - line:3:1])
+          (top_level_code_decl range=[foo.swift:1:1 - line:3:1]))
         """
         let (node, _) = try parseNode().parse(content)
         XCTAssertEqual(node.children.count, 2)
