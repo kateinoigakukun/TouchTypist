@@ -16,10 +16,11 @@ class XcodeCommand {
         arguments.removeFirst()
 
         let strippedArguments = SwiftcInvocator.stripXcodeArgumentsForASTDump(arguments)
-        for arguments in strippedArguments {
+        for (primarySource, arguments) in strippedArguments {
             let process = Process()
             process.launchPath = swiftcPath.path
             process.arguments = arguments
+            print("Processing \(primarySource)")
             let outputPipe = Pipe()
             var outputData = Data()
             let outputSource = DispatchSource.makeReadSource(

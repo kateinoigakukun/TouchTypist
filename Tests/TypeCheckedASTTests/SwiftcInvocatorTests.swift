@@ -23,9 +23,9 @@ class SwiftcInvocatorTests: XCTestCase {
         XCTAssertEqual(
             sources,
             [
-                2: "source1.swift",
-                3: "source2.swift",
-                4: "source3.swift",
+                "source1.swift",
+                "source2.swift",
+                "source3.swift",
             ]
         )
     }

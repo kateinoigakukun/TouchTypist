@@ -89,7 +89,7 @@ class CanonicalTransformer {
                     attributes.append(.location(location))
                 case .symbol("type"):
                     guard case let .singleQuoted(type) = tokens[index+1] else {
-                        fatalError()
+                        continue
                     }
                     attributes.append(.type(type))
                 default: continue

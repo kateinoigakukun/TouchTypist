@@ -81,7 +81,7 @@ class ASTParser {
                 state.context = .indent(length + 1)
             case (.indent(let length), "("):
                 switch length {
-                case state.indentDepth+2:
+                case (state.indentDepth+2)...:
                     let newNode = RawASTNode()
                     newNode.parent = state.current
                     state.current.children.append(newNode)
@@ -109,10 +109,6 @@ class ASTParser {
                 state.buffers = []
                 state.context = .nonSpaceSymbol
             case (.indent, ")"): break
-            case (.indent, "#"): // #if or #else
-                state.indentDepth += 4
-                skipUntilEndOfLine()
-                state.context = .indent(0)
             case (.indent, _):
                 skipUntilEndOfLine()
             case (.value, "\""):

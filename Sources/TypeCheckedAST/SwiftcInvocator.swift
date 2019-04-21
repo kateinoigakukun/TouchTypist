@@ -74,23 +74,24 @@ public struct SwiftcInvocator {
         return result
     }
 
-    public static func stripXcodeArgumentsForASTDump(_ arguments: [String]) -> [[String]] {
+    public static func stripXcodeArgumentsForASTDump(_ arguments: [String]) -> [(String, [String])] {
         var (arguments, sources) = parseXcodeArguments(arguments)
-        let firstSourceIndex = sources.lazy.sorted(by: { $0.key > $1.key }).first!.key
+        let firstSourceIndex = arguments.firstIndex(of: sources.first!)!
         arguments.insert("-primary-file", at: firstSourceIndex)
-        return sources.map { index, primarySource in
+        return sources.map { primarySource in
+            let index = arguments.firstIndex(of: primarySource)!
             var newArguments = arguments
             let tmp = arguments[index]
             newArguments[index] = newArguments[firstSourceIndex+1]
             newArguments[firstSourceIndex+1] = tmp
-            return newArguments
+            return (primarySource, newArguments)
         }
     }
-    public static func parseXcodeArguments(_ arguments: [String]) -> (arguments: [String], sources: [Int: String]) {
+    public static func parseXcodeArguments(_ arguments: [String]) -> (arguments: [String], sources: [String]) {
         var stripped: [String] = []
         var index = arguments.startIndex
         var argument: String { return arguments[index] }
-        var sources: [Int: String] = [:]
+        var sources: [String] = []
         while index != arguments.endIndex {
             switch argument {
             case "-c",
@@ -124,7 +125,7 @@ public struct SwiftcInvocator {
                     }
                     continue
                 }
-                sources[index] = argument
+                sources.append(argument)
                 stripped.append(argument)
                 index = arguments.index(after: index)
             }
