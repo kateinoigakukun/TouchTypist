@@ -1,6 +1,6 @@
 import SwiftSyntax
 import Foundation
-import TypeCheckedAST
+@testable import TypeCheckedAST
 
 public final class SwiftTypeInjector {
     public init() {}
@@ -10,7 +10,7 @@ public final class SwiftTypeInjector {
     }
 
     public func rewrite(content: String) throws {
-        let dumpedNodeList: [DumpedNode] = try TypeCheckedASTParser().parse(content: content)
+        let dumpedNodeList: [DumpedNode] = [ASTParser().parse(content).asLegacyNode()!]
         try rewrite(dumpedNodeList: dumpedNodeList)
     }
 

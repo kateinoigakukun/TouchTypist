@@ -13,7 +13,7 @@ public final class TypeCheckedASTParser {
         }
         let invocator = try SwiftcInvocator(sourceFile: swiftSourceFile, swiftcURL: swiftcURL)
         let result = try invocator.dumpAST()
-        let (node, _) = try parseNode().parse(.root(from: result)).get()
+        let node: DumpedNode = ASTParser().parse(result).asLegacyNode()!
         return node
     }
 
