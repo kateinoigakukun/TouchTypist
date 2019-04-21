@@ -130,7 +130,7 @@ struct ASTAttribute {
 
 class ASTParser {
     class State {
-        enum ParsingContext {
+        enum Context {
             case root
             case indent(Int)
             case node
@@ -146,7 +146,7 @@ class ASTParser {
         var buffers: [Character] = []
         let input: String
         var indentDepth: Int = 0
-        var context: ParsingContext = .node
+        var context: Context = .node
         init(input: String) {
             self.input = input
             self.current = self.root
@@ -187,12 +187,17 @@ class ASTParser {
                 let value = String(state.buffers)
                 state.current.tokens.append(.nonSpaceSymbol(value))
                 state.context = .indent(0)
+            case (.nonSpaceSymbol, " "):
+                let value = String(state.buffers)
+                state.current.tokens.append(.nonSpaceSymbol(value))
+                state.context = .value
+            case (.nonSpaceSymbol, _):
+                state.buffers.append(character)
             case (_, "\n"):
                 if ["(", " ", "\n"].contains(peek()) {
                     state.context = .indent(0)
                 } else {
                     state.buffers.append(character)
-                    print("Unexpected char \(peek().debugDescription) in \(state.context)")
                     succeed()
                     skipUntilEndOfLine()
                 }
@@ -234,12 +239,6 @@ class ASTParser {
                 state.context = .indent(0)
             case (.indent, _):
                 skipUntilEndOfLine()
-            case (.nonSpaceSymbol, " "):
-                let value = String(state.buffers)
-                state.current.tokens.append(.nonSpaceSymbol(value))
-                state.context = .value
-            case (.nonSpaceSymbol, _):
-                state.buffers.append(character)
             case (.value, "\""):
                 state.buffers = []
                 state.context = .doubleQuoted
@@ -258,6 +257,7 @@ class ASTParser {
             case (.doubleQuoted, "\""):
                 let value = String(state.buffers)
                 state.current.tokens.append(.doubleQuoted(value))
+                state.buffers = []
                 state.context = .value
             case (.doubleQuoted, _):
                 state.buffers.append(character)
