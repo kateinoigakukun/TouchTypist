@@ -2,7 +2,7 @@ import SwiftSyntax
 import TypeCheckedAST
 
 final class ClosureExprWriter {
-    func write(_ syntax: ClosureExprSyntax, node: DumpedNode) -> ClosureExprSyntax {
+    func write(_ syntax: ClosureExprSyntax, node: ASTNode) -> ClosureExprSyntax {
         if let input = syntax.signature?.input as? ParameterClauseSyntax {
             return write(syntax, input: input, node: node)
         }
@@ -13,7 +13,7 @@ final class ClosureExprWriter {
     }
 
     // map { i in }
-    func write(_ syntax: ClosureExprSyntax, parameterList: ClosureParamListSyntax, node: DumpedNode) -> ClosureExprSyntax {
+    func write(_ syntax: ClosureExprSyntax, parameterList: ClosureParamListSyntax, node: ASTNode) -> ClosureExprSyntax {
         guard let parenNode = node.find(point: Point(position: syntax.position)),
             let closureNode = parenNode.find(where: { $0.name == "closure_expr" }),
             let closureRawType = closureNode.type,
@@ -60,7 +60,7 @@ final class ClosureExprWriter {
         return syntax.withSignature(newSignature)
     }
 
-    func addTypeAnnotation(to parameter: ClosureParamSyntax, parameterListNode node: DumpedNode) -> FunctionParameterSyntax {
+    func addTypeAnnotation(to parameter: ClosureParamSyntax, parameterListNode node: ASTNode) -> FunctionParameterSyntax {
         let funcParameter: FunctionParameterSyntax = SyntaxFactory.makeFunctionParameter(
             attributes: nil, firstName: parameter.name.withoutTrailingTrivia(), secondName: nil,
             colon: nil,
@@ -79,7 +79,7 @@ final class ClosureExprWriter {
 
 
     // map { (i) in }
-    func write(_ syntax: ClosureExprSyntax, input: ParameterClauseSyntax, node: DumpedNode) -> ClosureExprSyntax {
+    func write(_ syntax: ClosureExprSyntax, input: ParameterClauseSyntax, node: ASTNode) -> ClosureExprSyntax {
         guard let parenNode = node.find(point: Point(position: syntax.position)),
             let closureNode = parenNode.find(where: { $0.name == "closure_expr" }),
             let closureRawType = closureNode.type,
@@ -118,7 +118,7 @@ final class ClosureExprWriter {
         return syntax.withSignature(newSignature)
     }
 
-    func addTypeAnnotation(to parameter: FunctionParameterSyntax, parameterListNode node: DumpedNode) -> FunctionParameterSyntax {
+    func addTypeAnnotation(to parameter: FunctionParameterSyntax, parameterListNode node: ASTNode) -> FunctionParameterSyntax {
         guard let parameterName = parameter.firstName, parameter.type == nil else {
             return parameter
         }

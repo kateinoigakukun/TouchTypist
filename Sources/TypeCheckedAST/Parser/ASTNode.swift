@@ -7,15 +7,43 @@
 
 import Foundation
 
-class ASTNode {
-    var name: String?
-    var children: [ASTNode] = []
-    var value: String?
-    var tokens: [ASTToken] = []
-    weak var parent: ASTNode?
+public class ASTNode {
+    public let name: String
+    public let value: String?
+    public let children: [ASTNode]
+    public let attributes: [Attribute]
+    public let rawTokens: [ASTToken]
 
-    func asLegacyNode() -> DumpedNode? {
-        var tokens = self.tokens
+    public lazy var location: Point? = {
+        return attributes.compactMapFirst {
+            switch $0 {
+            case .location(let point): return point
+            default: return nil
+            }
+        }
+    }()
+
+    public lazy var range: Range? = {
+        return attributes.compactMapFirst {
+            switch $0 {
+            case .range(let range): return range
+            default: return nil
+            }
+        }
+    }()
+
+    public lazy var type: String? = {
+        return attributes.compactMapFirst {
+            switch $0 {
+            case .type(let type): return type
+            default: return nil
+            }
+        }
+    }()
+
+
+    init?(rawAST: RawASTNode) {
+        var tokens = rawAST.tokens
         let name: String? = {
             for (index, token) in tokens.enumerated() {
                 switch token {
@@ -31,7 +59,7 @@ class ASTNode {
         var additionalAttributes: [Attribute] = []
         guard let _name = name else { return nil }
         if _name == "parameter_list" {
-            childrenLoop: for child in children {
+            childrenLoop: for child in rawAST.children {
                 for (index, token) in child.tokens.enumerated() {
                     switch token {
                     case .range(let rangeValue):
@@ -46,7 +74,7 @@ class ASTNode {
                 }
             }
         }
-        let childrenNode = children.compactMap { $0.asLegacyNode() }
+        let childrenNode = rawAST.children.compactMap { ASTNode(rawAST: $0) }
         func parseAttribute(tokens: [ASTToken]) -> ([Attribute], [ASTToken]) {
             var attributes: [Attribute] = []
             var usedIndexes: [Int] = []
@@ -93,27 +121,61 @@ class ASTNode {
                 default: return nil
                 }
             }.first
-        return DumpedNode(
-            name: _name,
-            nodeContents: childrenNode.map(NodeContent.node)
-                + (attributes + additionalAttributes).map(NodeContent.attribute)
-                + (value.map { [NodeContent.value($0)] } ?? [])
-        )
+        self.name = _name
+        self.children = childrenNode
+        self.attributes = attributes + additionalAttributes
+        self.value = value
+        self.rawTokens = rawAST.tokens
+    }
+
+
+    func findChildren(point: Point) -> ASTNode? {
+        guard !children.isEmpty else {
+            return nil
+        }
+        let hitNodes = children.compactMap {
+            $0.find(point: point)
+        }
+        return hitNodes.first
+    }
+
+    public func find(point: Point) -> ASTNode? {
+        guard let location = location else {
+            guard let range = range else { return findChildren(point: point) }
+            if range.contains(point) {
+                return findChildren(point: point) ?? self
+            } else {
+                return findChildren(point: point)
+            }
+        }
+        if location == point {
+            return self
+        } else if location > point {
+            return nil
+        } else {
+            return findChildren(point: point)
+        }
+    }
+
+    public func find(where prediction: @escaping (ASTNode) -> Bool) -> ASTNode? {
+        guard prediction(self) else {
+            if let found = children.first(where: prediction) {
+                return found
+            } else {
+                return children.lazy.compactMap { $0.find(where: prediction) }.first
+            }
+        }
+        return self
     }
 }
 
 
-extension ASTNode: CustomReflectable {
-    var customMirror: Mirror {
-        return Mirror.init(
-            self,
-            children: Array<Mirror.Child>(
-                arrayLiteral:
-                (label: "name", value: name ?? "<null>"),
-                (label: "value", value: value ?? "<null>"),
-                (label: "tokens", value: tokens),
-                (label: "children", value: children)
-            )
-        )
+fileprivate extension Array {
+    func compactMapFirst<U>(where transform: (Element) -> U?) -> U? {
+        for element in self {
+            guard let newElement = transform(element) else { continue }
+            return newElement
+        }
+        return nil
     }
 }

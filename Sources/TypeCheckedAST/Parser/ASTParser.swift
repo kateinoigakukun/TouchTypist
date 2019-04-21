@@ -18,19 +18,19 @@ class ASTParser {
             case value
             case range
         }
-        let root: ASTNode = .init()
-        var current: ASTNode
+        let root: RawASTNode = .init()
+        var current: RawASTNode
         var buffers: [Character] = []
         let input: String
         var indentDepth: Int = 0
-        var context: Context = .node
+        var context: Context = .root
         init(input: String) {
             self.input = input
             self.current = self.root
         }
     }
 
-    func parse(_ input: String) -> ASTNode {
+    func parse(_ input: String) -> RawASTNode {
 
         let state = State(input: input)
         var character: Character
@@ -54,7 +54,6 @@ class ASTParser {
             guard nextIndex != state.input.endIndex else { return nil }
             return state.input[nextIndex]
         }
-        state.context = .root
         while index != state.input.endIndex {
             switch (state.context, character) {
             case (.root, "("):
@@ -83,24 +82,24 @@ class ASTParser {
             case (.indent(let length), "("):
                 switch length {
                 case state.indentDepth+2:
-                    let newNode = ASTNode()
+                    let newNode = RawASTNode()
                     newNode.parent = state.current
                     state.current.children.append(newNode)
                     state.current = newNode
                     state.indentDepth += 2
                 case state.indentDepth:
-                    let newNode = ASTNode()
+                    let newNode = RawASTNode()
                     newNode.parent = state.current.parent
                     state.current.parent?.children.append(newNode)
                     state.current = newNode
                 case ...state.indentDepth:
                     var depth = state.indentDepth
-                    var parent: ASTNode = state.current.parent!
+                    var parent: RawASTNode = state.current.parent!
                     while depth > length {
                         depth -= 2
                         parent = parent.parent!
                     }
-                    let newNode = ASTNode()
+                    let newNode = RawASTNode()
                     newNode.parent = parent
                     parent.children.append(newNode)
                     state.current = newNode

@@ -5,7 +5,7 @@
 //  Created by Yuta Saito on 2019/04/21.
 //
 
-enum ASTToken {
+public enum ASTToken {
     case symbol(String)
     case range(String)
     case singleQuoted(String)

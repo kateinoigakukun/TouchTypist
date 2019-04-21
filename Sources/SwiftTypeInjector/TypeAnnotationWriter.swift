@@ -2,8 +2,8 @@ import TypeCheckedAST
 import SwiftSyntax
 
 final class TypeAnnotationWriter: SyntaxRewriter {
-    let node: DumpedNode
-    init(node: DumpedNode) {
+    let node: ASTNode
+    init(node: ASTNode) {
         self.node = node
     }
 
