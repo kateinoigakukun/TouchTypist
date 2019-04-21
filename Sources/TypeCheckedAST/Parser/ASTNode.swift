@@ -98,8 +98,44 @@ public class ASTNode {
         }
         return self
     }
-}
 
+
+    public func dump() {
+        print(_dump())
+    }
+
+    private func _dump(depth: Int = 0) -> String {
+        let typeNames = attributes.compactMap { attr -> String? in
+            switch attr {
+            case .type(let type): return type
+            default: return nil
+            }
+        }
+        let typeNamesString = typeNames.map { "type='\($0)'" }.joined(separator: " ")
+        let locations = attributes.compactMap { attr -> Point? in
+            switch attr {
+            case .location(let point): return point
+            default: return nil
+            }
+        }
+        let locationsString = locations.map { "location=\($0)" }.joined(separator: " ")
+        let ranges = attributes.compactMap { attr -> Range? in
+            switch attr {
+            case .range(let range): return range
+            default: return nil
+            }
+        }
+        let rangesString = ranges.map { "range=\($0)" }.joined(separator: " ")
+        let indent = Array(repeating: " ", count: depth).joined()
+        let valueString = value.map { " \($0)" } ?? ""
+        return """
+        \(indent)(\(name)\(valueString) \(typeNamesString) \(locationsString) \(rangesString)
+        \(children.map { $0._dump(depth: depth + 2) }.joined(separator: "\n"))
+        \(indent))
+        """
+    }
+
+}
 
 fileprivate extension Array {
     func compactMapFirst<U>(where transform: (Element) -> U?) -> U? {

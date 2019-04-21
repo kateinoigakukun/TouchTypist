@@ -182,6 +182,14 @@ class ASTParser {
 
             succeed()
         }
+        if !state.buffers.isEmpty {
+            switch state.context {
+            case .symbol:
+                let token = ASTToken.symbol(String(state.buffers))
+                state.current.tokens.append(token)
+            default: break
+            }
+        }
         return state.root
     }
 }

@@ -22,19 +22,19 @@ class FindNodeTests: XCTestCase {
     }
 
     func testFindInPosition() {
-        let node = DumpedNode(
+        let node = ASTNode(
             name: "1",
             location: location(1, 1),
             children: [
-                DumpedNode(
+                ASTNode(
                     name: "2",
                     location: location(1, 2)
                 ),
-                DumpedNode(
+                ASTNode(
                     name: "3",
                     location: location(2, 2)
                 ),
-                DumpedNode(
+                ASTNode(
                     name: "4",
                     location: location(3, 2)
                 ),
@@ -49,28 +49,28 @@ class FindNodeTests: XCTestCase {
     }
 
     func testFindInRange() {
-        let node = DumpedNode(
+        let node = ASTNode(
             name: "1",
             range: range((1, 1), (4, 1)),
             children: [
-                DumpedNode(
+                ASTNode(
                     name: "2",
                     range: range((1, 1), (2, 3)),
                     children: [
-                        DumpedNode(
+                        ASTNode(
                             name: "3",
                             location: location(2, 2)
                         )
                     ]
                 ),
-                DumpedNode(
+                ASTNode(
                     name: "4",
                     range: range((2, 3), (3, 1))
                 ),
-                DumpedNode(
+                ASTNode(
                     name: "5",
                     children: [
-                        DumpedNode(
+                        ASTNode(
                             name: "6",
                             location: location(3, 5)
                         )
@@ -101,12 +101,12 @@ class FindNodeTests: XCTestCase {
     }
 }
 
-extension DumpedNode {
+extension ASTNode {
 
-    init(name: String,
+    convenience init(name: String,
          range: Range? = nil,
          location: Point? = nil,
-         children: [DumpedNode] = []) {
+         children: [ASTNode] = []) {
         var attributes = [Attribute]()
         if let range = range {
             attributes.append(.range(range))
@@ -116,8 +116,9 @@ extension DumpedNode {
         }
         self.init(
             name: name,
-            nodeContents: attributes.map(NodeContent.attribute)
-                + children.map(NodeContent.node)
+            children: children,
+            attributes: attributes,
+            rawTokens: []
         )
     }
 }
