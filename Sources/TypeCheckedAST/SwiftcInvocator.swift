@@ -74,11 +74,23 @@ public struct SwiftcInvocator {
         return result
     }
 
-
-    public static func stripXcodeArgumentsForASTDump(_ arguments: [String]) -> [String] {
+    public static func stripXcodeArgumentsForASTDump(_ arguments: [String]) -> [[String]] {
+        var (arguments, sources) = parseXcodeArguments(arguments)
+        let firstSourceIndex = sources.lazy.sorted(by: { $0.key > $1.key }).first!.key
+        arguments.insert("-primary-file", at: firstSourceIndex)
+        return sources.map { index, primarySource in
+            var newArguments = arguments
+            let tmp = arguments[index]
+            newArguments[index] = newArguments[firstSourceIndex+1]
+            newArguments[firstSourceIndex+1] = tmp
+            return newArguments
+        }
+    }
+    public static func parseXcodeArguments(_ arguments: [String]) -> (arguments: [String], sources: [Int: String]) {
         var stripped: [String] = []
         var index = arguments.startIndex
         var argument: String { return arguments[index] }
+        var sources: [Int: String] = [:]
         while index != arguments.endIndex {
             switch argument {
             case "-c",
@@ -103,10 +115,21 @@ public struct SwiftcInvocator {
                     index = arguments.index(after: index)
                     continue
                 }
+                if argument.hasPrefix("-") {
+                    stripped.append(argument)
+                    index = arguments.index(after: index)
+                    if index != arguments.endIndex && !argument.hasPrefix("-") {
+                        stripped.append(argument)
+                        index = arguments.index(after: index)
+                    }
+                    continue
+                }
+                sources[index] = argument
                 stripped.append(argument)
                 index = arguments.index(after: index)
             }
         }
-        return ["-dump-ast", "-suppress-warnings"] + stripped
+        let strippedArguments = ["-frontend", "-dump-ast", "-suppress-warnings"] + stripped
+        return (arguments: strippedArguments, sources: sources)
     }
 }

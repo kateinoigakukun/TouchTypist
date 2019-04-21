@@ -16,23 +16,23 @@ class XcodeCommand {
         arguments.removeFirst()
 
         let strippedArguments = SwiftcInvocator.stripXcodeArgumentsForASTDump(arguments)
-
-        let process = Process()
-        process.launchPath = swiftcPath.path
-        process.arguments = strippedArguments
-        let outputPipe = Pipe()
-        var outputData = Data()
-        let outputSource = DispatchSource.makeReadSource(
-            fileDescriptor: outputPipe.fileHandleForReading.fileDescriptor)
-        outputSource.setEventHandler {
-            outputData.append(outputPipe.fileHandleForReading.availableData)
+        for arguments in strippedArguments {
+            let process = Process()
+            process.launchPath = swiftcPath.path
+            process.arguments = arguments
+            let outputPipe = Pipe()
+            var outputData = Data()
+            let outputSource = DispatchSource.makeReadSource(
+                fileDescriptor: outputPipe.fileHandleForReading.fileDescriptor)
+            outputSource.setEventHandler {
+                outputData.append(outputPipe.fileHandleForReading.availableData)
+            }
+            outputSource.resume()
+            process.standardOutput = outputPipe
+            process.launch()
+            process.waitUntilExit()
+            try! outputData.write(to: URL(fileURLWithPath: String(dumpPath)))
         }
-        outputSource.resume()
-        process.standardOutput = outputPipe
-        process.standardError = outputPipe
-        process.launch()
-        process.waitUntilExit()
-        try! outputData.write(to: URL(fileURLWithPath: String(dumpPath)))
     }
 
 }
