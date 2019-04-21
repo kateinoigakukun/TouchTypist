@@ -116,6 +116,8 @@ public struct SwiftcInvocator {
                     index = arguments.index(after: index)
                     continue
                 }
+
+                // Extract source file path
                 if argument.hasPrefix("-") {
                     stripped.append(argument)
                     index = arguments.index(after: index)
