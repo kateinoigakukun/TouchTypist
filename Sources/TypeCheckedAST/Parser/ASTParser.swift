@@ -14,7 +14,6 @@ class ASTNode {
 
     func asLegacyNode() -> DumpedNode? {
         var tokens = self.tokens
-        let childrenNode = children.compactMap { $0.asLegacyNode() }.map(NodeContent.node)
         let name: String? = {
             for (index, token) in tokens.enumerated() {
                 switch token {
@@ -26,8 +25,27 @@ class ASTNode {
             }
             return nil
         }()
-
-        func parseAttribute(tokens: [ASTToken]) -> ([NodeContent], [ASTToken]) {
+        // workaround for parameter_list
+        var additionalAttributes: [Attribute] = []
+        guard let _name = name else { return nil }
+        if _name == "parameter_list" {
+            childrenLoop: for child in children {
+                for (index, token) in child.tokens.enumerated() {
+                    switch token {
+                    case .range(let rangeValue):
+                        let range = try! parseRange().parse(.root(from: rangeValue)).get().0
+                        additionalAttributes.append(.range(range))
+                        child.tokens.remove(at: index-2)
+                        child.tokens.remove(at: index-2)
+                        child.tokens.remove(at: index-2)
+                        break childrenLoop
+                    default: break
+                    }
+                }
+            }
+        }
+        let childrenNode = children.compactMap { $0.asLegacyNode() }
+        func parseAttribute(tokens: [ASTToken]) -> ([Attribute], [ASTToken]) {
             var attributes: [Attribute] = []
             var usedIndexes: [Int] = []
             for (index, token) in tokens.enumerated() {
@@ -61,9 +79,9 @@ class ASTNode {
                 if usedIndexes.contains(index) { return nil }
                 return token
             }
-            return (attributes.map(NodeContent.attribute), newTokens)
+            return (attributes, newTokens)
         }
-        guard let _name = name else { return nil }
+
         let (attributes, newTokens) = parseAttribute(tokens: tokens)
         let value: String? = newTokens.lazy
             .compactMap { token in
@@ -75,7 +93,8 @@ class ASTNode {
             }.first
         return DumpedNode(
             name: _name,
-            nodeContents: childrenNode + attributes
+            nodeContents: childrenNode.map(NodeContent.node)
+                + (attributes + additionalAttributes).map(NodeContent.attribute)
                 + (value.map { [NodeContent.value($0)] } ?? [])
         )
     }
@@ -164,6 +183,10 @@ class ASTParser {
             case (.root, "("):
                 state.context = .nonSpaceSymbol
             case (.root, _): fatalError()
+            case (.nonSpaceSymbol, "\n"):
+                let value = String(state.buffers)
+                state.current.tokens.append(.nonSpaceSymbol(value))
+                state.context = .indent(0)
             case (_, "\n"):
                 if ["(", " ", "\n"].contains(peek()) {
                     state.context = .indent(0)
@@ -235,6 +258,7 @@ class ASTParser {
             case (.doubleQuoted, "\""):
                 let value = String(state.buffers)
                 state.current.tokens.append(.doubleQuoted(value))
+                state.context = .value
             case (.doubleQuoted, _):
                 state.buffers.append(character)
             case (.singleQuoted, "'"):
