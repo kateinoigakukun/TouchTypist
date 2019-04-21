@@ -1,6 +1,6 @@
 import SwiftSyntax
 import Foundation
-@testable import TypeCheckedAST
+import TypeCheckedAST
 
 public final class SwiftTypeInjector {
     public init() {}
@@ -17,7 +17,7 @@ public final class SwiftTypeInjector {
     func rewrite(node: ASTNode) throws {
         guard let sourceFilePathString = node.value else { fatalError() }
         let sourceFilePath: URL = URL(fileURLWithPath: sourceFilePathString)
-        let writer: TypeAnnotationWriter = TypeAnnotationWriter(node: node)
+        let writer: TypeAnnotationRewriter = TypeAnnotationRewriter(node: node)
         let syntax: SourceFileSyntax = try SyntaxTreeParser.parse(sourceFilePath)
         let result: Syntax = writer.visit(syntax)
         try result.description.write(to: sourceFilePath, atomically: true, encoding: .utf8)

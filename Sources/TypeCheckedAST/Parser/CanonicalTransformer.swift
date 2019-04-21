@@ -7,10 +7,12 @@
 
 import Foundation
 
+// FIXME
 class CanonicalTransformer {
     enum Error: LocalizedError {
         case noNodeName
     }
+
     func transform(rawAST: RawASTNode) throws -> ASTNode {
         let (optionalName, tokens) = trimName(rawAST.tokens)
         guard let name = optionalName else {
@@ -28,7 +30,7 @@ class CanonicalTransformer {
         let childrenNode = try rawAST.children.map {
             try CanonicalTransformer().transform(rawAST: $0)
         }
-        let (attributes, trimmedTokens) = trimAttribute(tokens: tokens)
+        let (attributes, trimmedTokens) = try trimAttribute(tokens: tokens)
         return ASTNode(
             name: name, children: childrenNode,
             attributes: attributes + additionalAttributes,
@@ -66,7 +68,7 @@ class CanonicalTransformer {
         return (nil, children)
     }
 
-    func trimAttribute(tokens: [ASTToken]) -> ([Attribute], [ASTToken]) {
+    func trimAttribute(tokens: [ASTToken]) throws -> ([Attribute], [ASTToken]) {
         var attributes: [Attribute] = []
         var usedIndexes: [Int] = []
         for (index, token) in tokens.enumerated() {
@@ -77,13 +79,13 @@ class CanonicalTransformer {
                     guard case let .range(string) = tokens[index+1] else {
                         fatalError()
                     }
-                    let range = try! parseRange().parse(.root(from: string)).get().0
+                    let range = try parseRange().parse(.root(from: string)).get().0
                     attributes.append(.range(range))
                 case .symbol("location"):
                     guard case let .symbol(string) = tokens[index+1] else {
                         fatalError()
                     }
-                    let location = try! parsePoint().parse(.root(from: string)).get().0
+                    let location = try parsePoint().parse(.root(from: string)).get().0
                     attributes.append(.location(location))
                 case .symbol("type"):
                     guard case let .singleQuoted(type) = tokens[index+1] else {

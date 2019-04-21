@@ -1,7 +1,7 @@
 import SwiftSyntax
 import TypeCheckedAST
 
-final class VariableDeclWriter {
+final class VariableDeclRewriter {
     func write(_ syntax: VariableDeclSyntax, node: ASTNode) -> VariableDeclSyntax {
         let newBindings: PatternBindingListSyntax = syntax.bindings.enumerated().reduce(syntax.bindings) {  bindings, element in
 

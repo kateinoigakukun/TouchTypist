@@ -24,7 +24,7 @@ class TypeAnnotationWriterTests: XCTestCase {
 
         let syntax = try! SyntaxTreeParser.parse(file)
         let dumpedNode = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
-        let result = TypeAnnotationWriter(node: dumpedNode).visit(syntax)
+        let result = TypeAnnotationRewriter(node: dumpedNode).visit(syntax)
 
         XCTAssertEqual(
             result.description,
@@ -68,7 +68,7 @@ class TypeAnnotationWriterTests: XCTestCase {
 
         let syntax = try! SyntaxTreeParser.parse(file)
         let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
-        let result = TypeAnnotationWriter(node: node).visit(syntax)
+        let result = TypeAnnotationRewriter(node: node).visit(syntax)
         XCTAssertEqual(
             result.description,
             """
@@ -90,7 +90,7 @@ class TypeAnnotationWriterTests: XCTestCase {
 
         let syntax = try! SyntaxTreeParser.parse(file)
         let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
-        let result = TypeAnnotationWriter(node: node).visit(syntax)
+        let result = TypeAnnotationRewriter(node: node).visit(syntax)
         XCTAssertEqual(
             result.description,
             """
@@ -112,7 +112,7 @@ class TypeAnnotationWriterTests: XCTestCase {
 
         let syntax = try! SyntaxTreeParser.parse(file)
         let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
-        let result = TypeAnnotationWriter(node: node).visit(syntax)
+        let result = TypeAnnotationRewriter(node: node).visit(syntax)
         XCTAssertEqual(
             result.description,
             """
@@ -135,7 +135,7 @@ class TypeAnnotationWriterTests: XCTestCase {
 
         let syntax = try! SyntaxTreeParser.parse(file)
         let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
-        let result = TypeAnnotationWriter(node: node).visit(syntax)
+        let result = TypeAnnotationRewriter(node: node).visit(syntax)
         XCTAssertEqual(
             result.description,
             """

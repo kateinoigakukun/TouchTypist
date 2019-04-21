@@ -70,6 +70,11 @@ public class ASTNode {
         return hitNodes.first
     }
 
+}
+
+
+// MARK: - Find
+extension ASTNode {
     public func find(point: Point) -> ASTNode? {
         guard let location = location else {
             guard let range = range else { return findChildren(point: point) }
@@ -100,6 +105,11 @@ public class ASTNode {
     }
 
 
+}
+
+
+// MARK: - Dump
+extension ASTNode {
     public func dump() {
         print(_dump())
     }

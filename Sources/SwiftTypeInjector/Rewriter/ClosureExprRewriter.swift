@@ -1,7 +1,7 @@
 import SwiftSyntax
 import TypeCheckedAST
 
-final class ClosureExprWriter {
+final class ClosureExprRewriter {
     func write(_ syntax: ClosureExprSyntax, node: ASTNode) -> ClosureExprSyntax {
         if let input = syntax.signature?.input as? ParameterClauseSyntax {
             return write(syntax, input: input, node: node)
