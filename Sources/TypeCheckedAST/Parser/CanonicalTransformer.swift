@@ -27,8 +27,8 @@ class CanonicalTransformer {
             }
             rawAST.children = children
         }
-        let childrenNode = try rawAST.children.map {
-            try CanonicalTransformer().transform(rawAST: $0)
+        let childrenNode = rawAST.children.compactMap {
+            try? CanonicalTransformer().transform(rawAST: $0)
         }
         let (attributes, trimmedTokens) = try trimAttribute(tokens: tokens)
         return ASTNode(
@@ -76,19 +76,25 @@ class CanonicalTransformer {
             case .symbol("="):
                 switch tokens[index-1] {
                 case .symbol("range"):
-                    guard case let .range(string) = tokens[index+1] else {
+                    let nextIndex = tokens.index(after: index)
+                    guard nextIndex != tokens.endIndex else { continue }
+                    guard case let .range(string) = tokens[nextIndex] else {
                         fatalError()
                     }
                     let range = try parseRange().parse(.root(from: string)).get().0
                     attributes.append(.range(range))
                 case .symbol("location"):
-                    guard case let .symbol(string) = tokens[index+1] else {
+                    let nextIndex = tokens.index(after: index)
+                    guard nextIndex != tokens.endIndex else { continue }
+                    guard case let .symbol(string) = tokens[nextIndex] else {
                         fatalError()
                     }
                     let location = try parsePoint().parse(.root(from: string)).get().0
                     attributes.append(.location(location))
                 case .symbol("type"):
-                    guard case let .singleQuoted(type) = tokens[index+1] else {
+                    let nextIndex = tokens.index(after: index)
+                    guard nextIndex != tokens.endIndex else { continue }
+                    guard case let .singleQuoted(type) = tokens[nextIndex] else {
                         continue
                     }
                     attributes.append(.type(type))

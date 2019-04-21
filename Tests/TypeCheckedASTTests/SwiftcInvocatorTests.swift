@@ -18,8 +18,7 @@ class SwiftcInvocatorTests: XCTestCase {
             "source3.swift",
             "-ICache"
         ]
-        let (stripped, sources) = SwiftcInvocator.parseXcodeArguments(mock)
-        XCTAssertEqual(stripped, ["-dump-ast", "-suppress-warnings"] + mock)
+        let (_, sources) = SwiftcInvocator.parseXcodeArguments(mock)
         XCTAssertEqual(
             sources,
             [
