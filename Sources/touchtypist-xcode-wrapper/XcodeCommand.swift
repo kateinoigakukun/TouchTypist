@@ -26,6 +26,7 @@ class XcodeCommand {
             }
             outputSource.resume()
             process.standardOutput = outputPipe
+            process.standardError = Pipe()
             process.launch()
             process.waitUntilExit()
 
