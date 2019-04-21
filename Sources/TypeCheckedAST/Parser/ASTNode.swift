@@ -9,10 +9,19 @@ import Foundation
 
 public class ASTNode {
     public let name: String
-    public let value: String?
     public let children: [ASTNode]
     public let attributes: [Attribute]
     public let rawTokens: [ASTToken]
+
+    public lazy var value: String? = {
+        return rawTokens.compactMapFirst {
+            switch $0 {
+            case .singleQuoted(let value): return value
+            case .doubleQuoted(let value): return value
+            default: return nil
+            }
+        }
+    }()
 
     public lazy var location: Point? = {
         return attributes.compactMapFirst {
@@ -41,91 +50,13 @@ public class ASTNode {
         }
     }()
 
-
-    init?(rawAST: RawASTNode) {
-        var tokens = rawAST.tokens
-        let name: String? = {
-            for (index, token) in tokens.enumerated() {
-                switch token {
-                case .unspaceableSymbol(let name):
-                    tokens.remove(at: index)
-                    return name
-                default: break
-                }
-            }
-            return nil
-        }()
-        // workaround for parameter_list
-        var additionalAttributes: [Attribute] = []
-        guard let _name = name else { return nil }
-        if _name == "parameter_list" {
-            childrenLoop: for child in rawAST.children {
-                for (index, token) in child.tokens.enumerated() {
-                    switch token {
-                    case .range(let rangeValue):
-                        let range = try! parseRange().parse(.root(from: rangeValue)).get().0
-                        additionalAttributes.append(.range(range))
-                        child.tokens.remove(at: index-2)
-                        child.tokens.remove(at: index-2)
-                        child.tokens.remove(at: index-2)
-                        break childrenLoop
-                    default: break
-                    }
-                }
-            }
-        }
-        let childrenNode = rawAST.children.compactMap { ASTNode(rawAST: $0) }
-        func parseAttribute(tokens: [ASTToken]) -> ([Attribute], [ASTToken]) {
-            var attributes: [Attribute] = []
-            var usedIndexes: [Int] = []
-            for (index, token) in tokens.enumerated() {
-                switch token {
-                case .symbol("="):
-                    switch tokens[index-1] {
-                    case .symbol("range"):
-                        guard case let .range(string) = tokens[index+1] else {
-                            fatalError()
-                        }
-                        let range = try! parseRange().parse(.root(from: string)).get().0
-                        attributes.append(.range(range))
-                    case .symbol("location"):
-                        guard case let .symbol(string) = tokens[index+1] else {
-                            fatalError()
-                        }
-                        let location = try! parsePoint().parse(.root(from: string)).get().0
-                        attributes.append(.location(location))
-                    case .symbol("type"):
-                        guard case let .singleQuoted(type) = tokens[index+1] else {
-                            fatalError()
-                        }
-                        attributes.append(.type(type))
-                    default: continue
-                    }
-                    usedIndexes.append(contentsOf: [index-1, index, index+1])
-                default: break
-                }
-            }
-            let newTokens = tokens.enumerated().compactMap { (index, token) -> ASTToken? in
-                if usedIndexes.contains(index) { return nil }
-                return token
-            }
-            return (attributes, newTokens)
-        }
-
-        let (attributes, newTokens) = parseAttribute(tokens: tokens)
-        let value: String? = newTokens.lazy
-            .compactMap { token in
-                switch token {
-                case .singleQuoted(let value): return value
-                case .doubleQuoted(let value): return value
-                default: return nil
-                }
-            }.first
-        self.name = _name
-        self.children = childrenNode
-        self.attributes = attributes + additionalAttributes
-        self.value = value
-        self.rawTokens = rawAST.tokens
+    init(
+        name: String, children: [ASTNode],
+        attributes: [Attribute], rawTokens: [ASTToken]) {
+        self.name = name
+        self.children = children
+        self.attributes = attributes
+        self.rawTokens = rawTokens
     }
 
 

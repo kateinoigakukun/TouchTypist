@@ -23,9 +23,8 @@ public final class TypeCheckedASTParser {
 
     public func parse(content: String, swiftcURL: URL? = nil) throws -> ASTNode {
         let rawNode = ASTParser().parse(content)
-        guard let canNode = ASTNode(rawAST: rawNode) else {
-            fatalError()
-        }
+        let transformer = CanonicalTransformer()
+        let canNode = try transformer.transform(rawAST: rawNode)
         return canNode
     }
 }
