@@ -4,6 +4,7 @@ public indirect enum Type: Equatable, CustomStringConvertible {
     case function(FunctionType)
     case tuple([Type])
     case nominal(String)
+    case generic(GenericType)
 
     public var description: String {
         switch self {
@@ -13,21 +14,39 @@ public indirect enum Type: Equatable, CustomStringConvertible {
             return "(\(types.map { $0.description }.joined(separator: ", ")))"
         case .nominal(let type):
             return type
+        case .generic(let genericType):
+            return genericType.description
         }
     }
 }
 
 public struct FunctionType: Equatable, CustomStringConvertible {
+    public let isEscaping: Bool
     public let input: Type
     public let isThrowable: Bool
     public let output: Type
 
     public var description: String {
-        if isThrowable {
-            return "\(input) throws -> \(output)"
-        } else {
-            return "\(input) -> \(output)"
+        var result: String = ""
+        if isEscaping {
+            result += "@escaping "
         }
+        result += "\(input) "
+        if isThrowable {
+            result += "throws -> \(output)"
+        } else {
+            result += "-> \(output)"
+        }
+        return result
+    }
+}
+
+public struct GenericType: Equatable, CustomStringConvertible {
+    public let name: String
+    public let parameters: [Type]
+
+    public var description: String {
+        return "\(name)<\(parameters.map { $0.description }.joined(separator: ", "))>"
     }
 }
 
@@ -40,6 +59,7 @@ func parseType() -> Parser<Type> {
         [
             Type.function <^> parseFunctionType(),
             Type.tuple <^> parseTuple(),
+            Type.generic <^> parseGenericType(),
             Type.nominal <^> parseNominal(),
         ]
     )
@@ -47,7 +67,7 @@ func parseType() -> Parser<Type> {
 
 func parseNominal() -> Parser<String> {
     return satisfyString(predicate: {
-        !["(", ")", ","].contains($0)
+        !["(", ")", "<", ">", ","].contains($0)
     }) >>- notEmpty
 }
 
@@ -59,10 +79,21 @@ func parseTuple() -> Parser<[Type]> {
 }
 
 func parseFunctionType() -> Parser<FunctionType> {
+    let escaping = (const(true) <^> token("@escaping")) <|> .pure(false)
     let throwable = (const(true) <^> token("throws")) <|> .pure(false)
     return curry(FunctionType.init)
-        <^> (Type.tuple <^> parseTuple() <* skipSpaces())
+        <^> (escaping <* skipSpaces())
+        <*> (Type.tuple <^> parseTuple() <* skipSpaces())
         <*> (throwable <* skipSpaces())
         <*> (token("->") *> skipSpaces() *> parseType())
 }
 
+func parseGenericType() -> Parser<GenericType> {
+    let name = satisfyString(predicate: { $0 != "<" })
+    let head = parseType()
+    let tailTypes = many(skipSpaces() *> char(",") *> skipSpaces() *> parseType())
+    let types = cons <^> head <*> tailTypes
+    return curry(GenericType.init)
+        <^> name <* char("<")
+        <*> types <* char(">")
+}
