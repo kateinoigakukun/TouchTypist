@@ -1,11 +1,7 @@
 # TouchTypist
 
 ## Installation
-
-```bash
-$ brew tap kateinoigakukun/touchtypist https://github.com/kateinoigakukun/touchtypist
-$ brew install touchtypist
-```
+ TODO
 
 ## Usage
 
