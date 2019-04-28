@@ -89,7 +89,7 @@ func parseFunctionType() -> Parser<FunctionType> {
 }
 
 func parseGenericType() -> Parser<GenericType> {
-    let name = satisfyString(predicate: { $0 != "<" })
+    let name = satisfyString(predicate: { !["<", "-", ">"].contains($0) })
     let head = parseType()
     let tailTypes = many(skipSpaces() *> char(",") *> skipSpaces() *> parseType())
     let types = cons <^> head <*> tailTypes

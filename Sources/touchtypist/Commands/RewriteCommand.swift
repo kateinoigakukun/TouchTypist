@@ -8,7 +8,7 @@ class RewriteCommand {
             print("Usage: touchtypist rewrite <AST file>")
             exit(1)
         }
-        let url = URL(fileURLWithPath: arguments[2])
+        let url: URL = URL(fileURLWithPath: arguments[2])
         do {
             try SwiftTypeInjector().rewrite(astSource: url)
         } catch {

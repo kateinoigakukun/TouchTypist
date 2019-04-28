@@ -5,12 +5,12 @@ import TypeCheckedAST
 public final class SwiftTypeInjector {
     public init() {}
     public func rewrite(astSource: URL) throws {
-        let node = try TypeCheckedASTParser().parse(astFile: astSource)
+        let node: ASTNode = try TypeCheckedASTParser().parse(astFile: astSource)
         try rewrite(node: node)
     }
 
     public func rewrite(content: String) throws {
-        let node = try TypeCheckedASTParser().parse(content: content)
+        let node: ASTNode = try TypeCheckedASTParser().parse(content: content)
         try rewrite(node: node)
     }
 

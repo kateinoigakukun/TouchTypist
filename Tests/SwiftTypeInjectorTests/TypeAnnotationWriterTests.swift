@@ -145,6 +145,26 @@ class TypeAnnotationWriterTests: XCTestCase {
             """
         )
     }
+
+    func testClosureGenerics() {
+        let file = createSourceFile(from:
+            """
+            func f(_: (Set<Int>) -> (Set<String>)) {}
+            f { a in return [] }
+            """
+        )
+
+        let syntax = try! SyntaxTreeParser.parse(file)
+        let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
+        let result = TypeAnnotationRewriter(node: node).visit(syntax)
+        XCTAssertEqual(
+            result.description,
+            """
+            func f(_: (Set<Int>) -> (Set<String>)) {}
+            f { (a: Set<Int>) -> Set<String> in return [] }
+            """
+        )
+    }
 }
 
 func createSourceFile(from input: String) -> URL {

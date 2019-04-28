@@ -13,7 +13,7 @@ func help() {
 }
 
 
-let arguments = ProcessInfo.processInfo.arguments
+let arguments: [String] = ProcessInfo.processInfo.arguments
 if arguments.count < 2 {
     help()
     exit(1)

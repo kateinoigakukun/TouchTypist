@@ -48,4 +48,18 @@ class ParserTypeTests: XCTestCase {
         XCTAssertEqual(type.input, .tuple([.generic(genericType)]))
         XCTAssertEqual(type.output, .nominal("Void"))
     }
+
+    func testParseGenericsOutput() throws {
+        let type = try parseFunctionType("(Set<Int>) -> Set<String>")
+        let genericInput = GenericType(
+            name: "Set",
+            parameters: [.nominal("Int")]
+        )
+        let genericOutput = GenericType(
+            name: "Set",
+            parameters: [.nominal("String")]
+        )
+        XCTAssertEqual(type.input, .tuple([.generic(genericInput)]))
+        XCTAssertEqual(type.output, .generic(genericOutput))
+    }
 }

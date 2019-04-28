@@ -3,7 +3,7 @@ import TypeCheckedAST
 
 final class VariableDeclRewriter {
     func write(_ syntax: VariableDeclSyntax, node: ASTNode) -> VariableDeclSyntax {
-        let newBindings: PatternBindingListSyntax = syntax.bindings.enumerated().reduce(syntax.bindings) {  bindings, element in
+        let newBindings: PatternBindingListSyntax = syntax.bindings.enumerated().reduce(syntax.bindings) {  (bindings: PatternBindingListSyntax, element: (offset: Int, element: PatternBindingSyntax)) -> PatternBindingListSyntax in
 
             let (offset, binding) = element
             if binding.typeAnnotation != nil { return bindings }
@@ -28,7 +28,7 @@ final class VariableDeclRewriter {
                 default: return $0
                 }
             } ?? []
-            let trailingTrivia = Trivia(pieces: trailingTriviaPieces)
+            let trailingTrivia: Trivia = Trivia(pieces: trailingTriviaPieces)
             let identifier: TokenSyntax = patternIdentifier.identifier.withTrailingTrivia(trailingTrivia)
             let newBinding: PatternBindingSyntax = binding.withTypeAnnotation(typeAnnotation)
                 .withPattern(patternIdentifier.withIdentifier(identifier))

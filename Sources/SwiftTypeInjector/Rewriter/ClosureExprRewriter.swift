@@ -26,15 +26,18 @@ final class ClosureExprRewriter {
                 return syntax
         }
 
-        let typedParameterList: [FunctionParameterSyntax] = parameterList.enumerated().map { element -> FunctionParameterSyntax in
-            let (index, param) = element
-            let newType: FunctionParameterSyntax = self.addTypeAnnotation(to: param, parameterListNode: parameterListNode)
-            let isLast: Bool = index == parameterList.count-1
-            if isLast {
-                return newType
-            } else {
-                return newType.withTrailingComma(SyntaxFactory.makeCommaToken(trailingTrivia: .spaces(1)))
-            }
+        let typedParameterList: [FunctionParameterSyntax] = parameterList.enumerated()
+            .map { (element: (offset: Int, element: ClosureParamSyntax))-> FunctionParameterSyntax in
+                let (index, param) = element
+                let newType: FunctionParameterSyntax = self.addTypeAnnotation(
+                    to: param, parameterListNode: parameterListNode
+                )
+                let isLast: Bool = index == parameterList.count-1
+                if isLast {
+                    return newType
+                } else {
+                    return newType.withTrailingComma(SyntaxFactory.makeCommaToken(trailingTrivia: .spaces(1)))
+                }
         }
         let newParameterList: FunctionParameterListSyntax = SyntaxFactory.makeFunctionParameterList(typedParameterList)
         let parameterClause: ParameterClauseSyntax = SyntaxFactory.makeParameterClause(
@@ -122,9 +125,8 @@ final class ClosureExprRewriter {
         guard let parameterName = parameter.firstName, parameter.type == nil else {
             return parameter
         }
-
-        guard let foundNode = node.children.first(where: { $0.value == parameterName.text }),
-            let typeName = foundNode.type else {
+        guard let parameterNode = node.children.first(where: { $0.value == parameterName.text }),
+            let typeName = parameterNode.type else {
             return parameter
         }
         let colon: TokenSyntax = SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1))
