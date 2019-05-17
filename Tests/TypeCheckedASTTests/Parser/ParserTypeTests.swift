@@ -12,29 +12,29 @@ class ParserTypeTests: XCTestCase {
 
     func testParseFunctionType() throws {
         let type1 = try parseFunctionType("(Int) -> Void")
-        XCTAssertEqual(type1.input, .tuple([.nominal("Int")]))
+        XCTAssertEqual(type1.input, [.nominal("Int")])
         XCTAssertEqual(type1.output, .nominal("Void"))
 
         let type2 = try parseFunctionType("(Int) -> (String, Int)")
-        XCTAssertEqual(type2.input, .tuple([.nominal("Int")]))
+        XCTAssertEqual(type2.input, [.nominal("Int")])
         XCTAssertEqual(type2.output, .tuple([.nominal("String"), .nominal("Int")]))
     }
 
     func testParseInoutFunctionType() throws {
         let type = try parseFunctionType("(inout Int) -> Void")
-        XCTAssertEqual(type.input, .tuple([.nominal("inout Int")]))
+        XCTAssertEqual(type.input, [.inout(.nominal("Int"))])
         XCTAssertEqual(type.output, .nominal("Void"))
     }
 
     func testParseEscapingFunctionType() throws {
-        let type = try parseFunctionType("(inout Int, @escaping (Void) -> Void) -> Void")
+        let type = try parseFunctionType("(Int, @escaping (Void) -> Void) -> Void")
         let escapingFunc = FunctionType(
             isEscaping: true,
-            input: .tuple([.nominal("Void")]),
+            input: [.nominal("Void")],
             isThrowable: false,
             output: .nominal("Void")
         )
-        let expectedInput = Type.tuple([.nominal("inout Int"), .function(escapingFunc)])
+        let expectedInput: [Type] = [.nominal("Int"), .function(escapingFunc)]
         XCTAssertEqual(type.input, expectedInput)
         XCTAssertEqual(type.output, .nominal("Void"))
     }
@@ -45,7 +45,7 @@ class ParserTypeTests: XCTestCase {
             name: "Result",
             parameters: [.nominal("Int"), .nominal("Error")]
         )
-        XCTAssertEqual(type.input, .tuple([.generic(genericType)]))
+        XCTAssertEqual(type.input, [.generic(genericType)])
         XCTAssertEqual(type.output, .nominal("Void"))
     }
 
@@ -59,7 +59,13 @@ class ParserTypeTests: XCTestCase {
             name: "Set",
             parameters: [.nominal("String")]
         )
-        XCTAssertEqual(type.input, .tuple([.generic(genericInput)]))
+        XCTAssertEqual(type.input, [.generic(genericInput)])
         XCTAssertEqual(type.output, .generic(genericOutput))
+    }
+    
+    func testParseInoutParameter() throws {
+        let type = try parseFunctionType("(inout Int, Int) -> ())")
+        XCTAssertEqual(type.input, [.inout(.nominal("Int")), .nominal("Int")])
+        XCTAssertEqual(type.output, .nominal("Void"))
     }
 }

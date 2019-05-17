@@ -122,6 +122,52 @@ class TypeAnnotationWriterTests: XCTestCase {
             """
         )
     }
+    
+    func testClosureInoutParameter() {
+        let file = createSourceFile(from:
+            """
+            [1, 2, 3].reduce(into: 0) { sum, i in
+                sum += i
+            }
+            """
+        )
+        
+        let syntax = try! SyntaxTreeParser.parse(file)
+        let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
+        let result = TypeAnnotationRewriter(node: node).visit(syntax)
+        XCTAssertEqual(
+            result.description,
+            """
+            [1, 2, 3].reduce(into: 0) { (sum: inout Int, i: Int) -> Void in
+                sum += i
+            }
+            """
+        )
+    }
+    
+    func testClosureEscapingParameter() {
+        let file = createSourceFile(from:
+            """
+            func f(_: (@escaping (Int) -> ()) -> ()) {}
+            f { closure in
+                return
+            }
+            """
+        )
+        
+        let syntax = try! SyntaxTreeParser.parse(file)
+        let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
+        let result = TypeAnnotationRewriter(node: node).visit(syntax)
+        XCTAssertEqual(
+            result.description,
+            """
+            func f(_: (@escaping (Int) -> ()) -> ()) {}
+            f { (closure: @escaping (Int) -> Void) -> Void in
+                return
+            }
+            """
+        )
+    }
 
     func testClosureAnonymousArgument() {
 

@@ -5,6 +5,7 @@ public indirect enum Type: Equatable, CustomStringConvertible {
     case tuple([Type])
     case nominal(String)
     case generic(GenericType)
+    case `inout`(Type)
 
     public var description: String {
         switch self {
@@ -16,13 +17,15 @@ public indirect enum Type: Equatable, CustomStringConvertible {
             return type
         case .generic(let genericType):
             return genericType.description
+        case .inout(let type):
+            return "inout \(type.description)"
         }
     }
 }
 
 public struct FunctionType: Equatable, CustomStringConvertible {
     public let isEscaping: Bool
-    public let input: Type
+    public let input: [Type]
     public let isThrowable: Bool
     public let output: Type
 
@@ -31,7 +34,7 @@ public struct FunctionType: Equatable, CustomStringConvertible {
         if isEscaping {
             result += "@escaping "
         }
-        result += "\(input) "
+        result += "\(Type.tuple(input)) "
         if isThrowable {
             result += "throws -> \(output)"
         } else {
@@ -55,14 +58,22 @@ public func parseFunctionType(_ signature: String) throws -> FunctionType {
 }
 
 func parseType() -> Parser<Type> {
-    return choice(
+    let type = choice(
         [
             Type.function <^> parseFunctionType(),
             Type.tuple <^> parseTuple(),
             Type.generic <^> parseGenericType(),
             Type.nominal <^> parseNominal(),
+            parseEmptyTuple()
         ]
     )
+    
+    let isInout = (const(true) <^> token("inout") <* skipSpaces()) <|> .pure(false)
+    return curry({ isInout, type in isInout ? .inout(type) : type }) <^> isInout <*> type
+}
+
+func parseEmptyTuple() -> Parser<Type> {
+    return const(.nominal("Void")) <^> token("()")
 }
 
 func parseNominal() -> Parser<String> {
@@ -83,7 +94,7 @@ func parseFunctionType() -> Parser<FunctionType> {
     let throwable = (const(true) <^> token("throws")) <|> .pure(false)
     return curry(FunctionType.init)
         <^> (escaping <* skipSpaces())
-        <*> (Type.tuple <^> parseTuple() <* skipSpaces())
+        <*> (parseTuple() <* skipSpaces())
         <*> (throwable <* skipSpaces())
         <*> (token("->") *> skipSpaces() *> parseType())
 }

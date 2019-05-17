@@ -15,22 +15,18 @@ final class ClosureExprRewriter {
     // map { i in }
     func write(_ syntax: ClosureExprSyntax, parameterList: ClosureParamListSyntax, node: ASTNode) -> ClosureExprSyntax {
         guard let parenNode = node.find(point: Point(position: syntax.position)),
-            let closureNode = parenNode.find(where: { $0.name == "closure_expr" }),
+            let closureNode = parenNode.find(where: { $0.name == "function_conversion_expr" })
+                ?? parenNode.find(where: { $0.name == "closure_expr" }),
             let closureRawType = closureNode.type,
             let closureType = try? parseFunctionType(closureRawType) else {
                 return syntax
         }
 
-        guard let parameterListNode = node.find(point: Point(position: parameterList.position)),
-            parameterListNode.name == "parameter_list" else {
-                return syntax
-        }
-
-        let typedParameterList: [FunctionParameterSyntax] = parameterList.enumerated()
-            .map { (element: (offset: Int, element: ClosureParamSyntax))-> FunctionParameterSyntax in
-                let (index, param) = element
+        let typedParameterList: [FunctionParameterSyntax] = zip(parameterList, closureType.input).enumerated()
+            .map { (element)-> FunctionParameterSyntax in
+                let (index, (parameter, type)) = element
                 let newType: FunctionParameterSyntax = self.addTypeAnnotation(
-                    to: param, parameterListNode: parameterListNode
+                    to: parameter, type: type
                 )
                 let isLast: Bool = index == parameterList.count-1
                 if isLast {
@@ -63,21 +59,18 @@ final class ClosureExprRewriter {
         return syntax.withSignature(newSignature)
     }
 
-    func addTypeAnnotation(to parameter: ClosureParamSyntax, parameterListNode node: ASTNode) -> FunctionParameterSyntax {
+    func addTypeAnnotation(to parameter: ClosureParamSyntax, type: Type) -> FunctionParameterSyntax {
         let funcParameter: FunctionParameterSyntax = SyntaxFactory.makeFunctionParameter(
             attributes: nil, firstName: parameter.name.withoutTrailingTrivia(), secondName: nil,
             colon: nil,
             type: nil,
             ellipsis: nil, defaultArgument: nil, trailingComma: nil
         )
+        guard parameter.name.text != "_" else { return funcParameter }
 
-        guard let foundNode = node.children.first(where: { $0.value == parameter.name.text }) else {
-            return funcParameter
-        }
-        guard let typeName = foundNode.type else { return funcParameter }
         return funcParameter
             .withColon(SyntaxFactory.makeColonToken(trailingTrivia: .spaces(1)))
-            .withType(SyntaxFactory.makeTypeIdentifier(typeName))
+            .withType(SyntaxFactory.makeTypeIdentifier(type.description))
     }
 
 
@@ -95,8 +88,8 @@ final class ClosureExprRewriter {
                 return syntax
         }
 
-        let typedParameterList: [FunctionParameterSyntax] = input.parameterList.map {
-            self.addTypeAnnotation(to: $0, parameterListNode: parameterListNode)
+        let typedParameterList: [FunctionParameterSyntax] = zip(input.parameterList, closureType.input).map {
+            self.addTypeAnnotation(to: $0, type: $1)
         }
         let newParameterList: FunctionParameterListSyntax = typedParameterList.enumerated()
             .reduce(input.parameterList) { (parameterList: FunctionParameterListSyntax, element: (offset: Int, element: FunctionParameterSyntax)) -> FunctionParameterListSyntax in
@@ -121,16 +114,10 @@ final class ClosureExprRewriter {
         return syntax.withSignature(newSignature)
     }
 
-    func addTypeAnnotation(to parameter: FunctionParameterSyntax, parameterListNode node: ASTNode) -> FunctionParameterSyntax {
-        guard let parameterName = parameter.firstName, parameter.type == nil else {
-            return parameter
-        }
-        guard let parameterNode = node.children.first(where: { $0.value == parameterName.text }),
-            let typeName = parameterNode.type else {
-            return parameter
-        }
+    func addTypeAnnotation(to parameter: FunctionParameterSyntax, type: Type) -> FunctionParameterSyntax {
+        guard parameter.firstName?.text != "_" else { return parameter }
         let colon: TokenSyntax = SyntaxFactory.makeColonToken().withTrailingTrivia(.spaces(1))
-        let type: TypeSyntax = SyntaxFactory.makeTypeIdentifier(typeName)
+        let type: TypeSyntax = SyntaxFactory.makeTypeIdentifier(type.description)
         return parameter.withColon(colon).withType(type)
     }
 }
