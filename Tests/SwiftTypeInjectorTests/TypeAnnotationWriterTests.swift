@@ -265,6 +265,26 @@ class TypeAnnotationWriterTests: XCTestCase {
             """
         )
     }
+    
+    func testTupleParameter() {
+        let file = createSourceFile(from:
+            """
+            zip([1], [2]).forEach { i, j in
+            }
+            """
+        )
+        
+        let syntax = try! SyntaxTreeParser.parse(file)
+        let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
+        let result = TypeAnnotationRewriter(node: node).visit(syntax)
+        XCTAssertEqual(
+            result.description,
+            """
+            zip([1], [2]).forEach { (i: Int, j: Int) -> Void in
+            }
+            """
+        )
+    }
 }
 
 func createSourceFile(from input: String) -> URL {

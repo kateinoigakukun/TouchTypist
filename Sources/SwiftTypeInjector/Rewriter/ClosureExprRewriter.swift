@@ -22,7 +22,18 @@ final class ClosureExprRewriter {
                 return syntax
         }
 
-        let typedParameterList: [FunctionParameterSyntax] = zip(parameterList, closureType.input).enumerated()
+        let inputs: [Type]
+        if closureType.input.count == parameterList.count {
+            inputs = closureType.input
+        } else {
+            guard closureType.input.count == 1 else { return syntax }
+            guard case let .tuple(types) = closureType.input[0],
+                types.count == parameterList.count else {
+                return syntax
+            }
+            inputs = types
+        }
+        let typedParameterList: [FunctionParameterSyntax] = zip(parameterList, inputs).enumerated()
             .map { (element)-> FunctionParameterSyntax in
                 let (index, (parameter, type)) = element
                 let newType: FunctionParameterSyntax = self.addTypeAnnotation(
