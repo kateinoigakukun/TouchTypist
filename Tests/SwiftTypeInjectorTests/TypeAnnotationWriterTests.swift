@@ -219,7 +219,11 @@ class TypeAnnotationWriterTests: XCTestCase {
                 let value1: T
                 let value2: U
             }
-            _ = Box(value1: 1, value2: "foo")
+            func foo<T>(_ value: T) {}
+            func main() {
+                _ = Box(value1: 1, value2: "foo")
+                foo(1)
+            }
             """
         )
         
@@ -233,7 +237,11 @@ class TypeAnnotationWriterTests: XCTestCase {
                 let value1: T
                 let value2: U
             }
-            _ = Box<Int, String>(value1: 1, value2: "foo")
+            func foo<T>(_ value: T) {}
+            func main() {
+                _ = Box<Int, String>(value1: 1, value2: "foo")
+                foo(1)
+            }
             """
         )
     }

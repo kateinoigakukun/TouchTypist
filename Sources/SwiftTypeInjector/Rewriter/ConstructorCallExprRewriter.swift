@@ -8,7 +8,7 @@ final class ConstructorCallExprRewriter {
         guard let identifier = called as? IdentifierExprSyntax else { return syntax }
         guard let constructor = node
             .find(point: Point(position: identifier.position))?
-            .find(where: { $0.name == "constructor_ref_call_expr" }),
+            .children.first(where: { $0.name == "constructor_ref_call_expr" }),
             let constructorTypeString = constructor.type,
             let constructorType = try? parseFunctionType(constructorTypeString),
             case let .generic(genericType) = constructorType.output else {
