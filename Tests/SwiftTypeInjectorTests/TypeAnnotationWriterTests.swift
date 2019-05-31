@@ -211,6 +211,32 @@ class TypeAnnotationWriterTests: XCTestCase {
             """
         )
     }
+
+    func testTypeParameter() {
+        let file = createSourceFile(from:
+            """
+            struct Box<T, U> {
+                let value1: T
+                let value2: U
+            }
+            _ = Box(value1: 1, value2: "foo")
+            """
+        )
+        
+        let syntax = try! SyntaxTreeParser.parse(file)
+        let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
+        let result = TypeAnnotationRewriter(node: node).visit(syntax)
+        XCTAssertEqual(
+            result.description,
+            """
+            struct Box<T, U> {
+                let value1: T
+                let value2: U
+            }
+            _ = Box<Int, String>(value1: 1, value2: "foo")
+            """
+        )
+    }
 }
 
 func createSourceFile(from input: String) -> URL {

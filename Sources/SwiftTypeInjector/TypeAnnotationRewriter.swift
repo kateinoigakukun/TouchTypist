@@ -14,4 +14,8 @@ final class TypeAnnotationRewriter: SyntaxRewriter {
     override func visit(_ syntax: ClosureExprSyntax) -> ExprSyntax {
         return super.visit(ClosureExprRewriter().write(syntax, node: node))
     }
+    
+    override func visit(_ syntax: FunctionCallExprSyntax) -> ExprSyntax {
+        return super.visit(ConstructorCallExprRewriter().write(syntax, node: node))
+    }
 }

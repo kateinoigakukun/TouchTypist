@@ -68,4 +68,9 @@ class ParserTypeTests: XCTestCase {
         XCTAssertEqual(type.input, [.inout(.nominal("Int")), .nominal("Int")])
         XCTAssertEqual(type.output, .nominal("Void"))
     }
+    
+    func testParseInnerType() throws {
+        let type = try parseFunctionType("(Int) -> A.B.C")
+        XCTAssertEqual(type.output, Type.nominal("A.B.C"))
+    }
 }
