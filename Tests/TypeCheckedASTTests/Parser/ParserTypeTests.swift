@@ -73,4 +73,9 @@ class ParserTypeTests: XCTestCase {
         let type = try parseFunctionType("(Int) -> A.B.C")
         XCTAssertEqual(type.output, Type.nominal("A.B.C"))
     }
+    
+    func testInnerGenericType() throws {
+        let (type, _) = try parseType().parse("A<B>.C")
+        XCTAssertEqual(type, Type.inner(parent: .generic(.init(name: "A", parameters: [.nominal("B")])), .nominal("C")))
+    }
 }

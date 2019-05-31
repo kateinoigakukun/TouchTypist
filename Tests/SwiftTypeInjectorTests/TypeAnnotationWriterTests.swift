@@ -211,6 +211,26 @@ class TypeAnnotationWriterTests: XCTestCase {
             """
         )
     }
+    
+    func testBackwardInference() {
+        let file = createSourceFile(from:
+            """
+            func f(_: (Void) -> Void) {}
+            [1, 2].map { _ in }.forEach(f)
+            """
+        )
+        
+        let syntax = try! SyntaxTreeParser.parse(file)
+        let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
+        let result = TypeAnnotationRewriter(node: node).visit(syntax)
+        XCTAssertEqual(
+            result.description,
+            """
+            func f(_: (Void) -> Void) {}
+            [1, 2].map { (_) -> Void in }.forEach(f)
+            """
+        )
+    }
 
     func testTypeParameter() {
         let file = createSourceFile(from:

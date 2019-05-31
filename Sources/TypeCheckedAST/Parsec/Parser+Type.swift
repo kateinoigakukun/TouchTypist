@@ -6,6 +6,7 @@ public indirect enum Type: Equatable, CustomStringConvertible {
     case nominal(String)
     case generic(GenericType)
     case `inout`(Type)
+    case inner(parent: Type, Type)
 
     public var description: String {
         switch self {
@@ -19,6 +20,8 @@ public indirect enum Type: Equatable, CustomStringConvertible {
             return genericType.description
         case .inout(let type):
             return "inout \(type.description)"
+        case .inner(let parent, let type):
+            return "\(parent.description).\(type.description)"
         }
     }
 }
@@ -69,11 +72,25 @@ func parseType() -> Parser<Type> {
     )
     
     let isInout = (const(true) <^> token("inout") <* skipSpaces()) <|> .pure(false)
-    return curry({ isInout, type in isInout ? .inout(type) : type }) <^> isInout <*> type
+    let inner = Optional.some <^> (token(".") *> parseType()) <|> .pure(nil)
+    return curry({ isInout, type, inner in
+        let inouted = isInout ? .inout(type) : type
+        if let inner = inner {
+            return .inner(parent: inouted, inner)
+        } else {
+            return inouted
+        }
+    }) <^> isInout <*> type <*> inner
 }
 
 func parseEmptyTuple() -> Parser<Type> {
     return const(.nominal("Void")) <^> token("()")
+}
+
+func parseInnerType() -> Parser<Type> {
+    return curry(Type.inner)
+        <^> parseType() <* token(".")
+        <*> parseType()
 }
 
 func parseNominal() -> Parser<String> {
