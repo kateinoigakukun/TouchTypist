@@ -23,7 +23,7 @@ final class ConstructorCallExprRewriter {
         }
         let genericArguments = SyntaxFactory.makeGenericArgumentList(arguments)
         let genericArgumentClause = SyntaxFactory.makeGenericArgumentClause(leftAngleBracket: SyntaxFactory.makeLeftAngleToken(), arguments: genericArguments, rightAngleBracket: SyntaxFactory.makeRightAngleToken())
-        let specializeExpr = SyntaxFactory.makeSpecializeExpr(expression: identifier, genericArgumentClause: genericArgumentClause)
+        let specializeExpr = SyntaxFactory.makeSpecializeExpr(expression: SyntaxFactory.makeIdentifierExpr(identifier: SyntaxFactory.makeIdentifier(genericType.name), declNameArguments: nil), genericArgumentClause: genericArgumentClause)
         return syntax.withCalledExpression(specializeExpr)
     }
 }

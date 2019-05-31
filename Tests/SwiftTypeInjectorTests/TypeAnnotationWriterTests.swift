@@ -285,6 +285,34 @@ class TypeAnnotationWriterTests: XCTestCase {
             """
         )
     }
+    
+    func testTypealiasedGenericType() {
+        let file = createSourceFile(from:
+            """
+            struct Box<T1, T2> {
+                let value1: T1
+                let value2: T2
+            }
+            typealias Alias<T> = Box<T, T>
+            let alias = Alias(value1: 1, value2: 2)
+            """
+        )
+        
+        let syntax = try! SyntaxTreeParser.parse(file)
+        let node = try! TypeCheckedASTParser().parse(swiftSourceFile: file)
+        let result = TypeAnnotationRewriter(node: node).visit(syntax)
+        XCTAssertEqual(
+            result.description,
+            """
+            struct Box<T1, T2> {
+                let value1: T1
+                let value2: T2
+            }
+            typealias Alias<T> = Box<T, T>
+            let alias = Box<Int, Int>(value1: 1, value2: 2)
+            """
+        )
+    }
 }
 
 func createSourceFile(from input: String) -> URL {
